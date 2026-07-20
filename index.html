@@ -5194,6 +5194,40 @@ async function hbAbrirPerfil(c) {
   }
 }
 
+// Abre a página de detalhe do contrato com dados reais do banco
+async function hbAbrirContratoDB(ctId){
+  var contratos=await dbListarContratos();
+  var ct=contratos.find(function(c){return c.id===ctId;});
+  if(!ct){showToast('Contrato não encontrado.');return;}
+  var bens=await dbListarBeneficiarios(ct.id);
+  var cobs=await dbListarCoberturas(ct.id);
+  function br(d){if(!d)return '—';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0].slice(2);}
+  var ramoNome=ct.ramos?ct.ramos.nome:'—';
+  var slugMap={'Seguro de Vida':'ccvida','Plano de Saúde':'ccsaude'};
+  var premio=ct.valor_premio?'R$'+parseFloat(ct.valor_premio).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—';
+  contratoData['db']={
+    seg:ct.seguradora,ramo:ramoNome,ramoCls:slugMap[ramoNome]||'ccvida',
+    renovAuto:!!ct.renovacao_auto,
+    apolice:ct.numero_apolice||'—',premio:premio,
+    vigIni:br(ct.vigencia_inicio),vigFim:br(ct.vigencia_fim),
+    info:[
+      {l:'Seguradora',v:ct.seguradora},
+      {l:'Número da Apólice',v:ct.numero_apolice||'—'},
+      {l:'Modalidade',v:ct.modalidade||'—'},
+      {l:'Periocidade',v:ct.periodicidade||'—'},
+      {l:'Forma de pagamento',v:ct.forma_pagamento||'—'},
+      {l:'Cliente',v:ct.clientes?ct.clientes.nome:'—'},
+      {l:'Comissão',v:(ct.comissao_pct||0)+'%'},
+      {l:'Valor Comissão',v:'R$ '+parseFloat(ct.valor_comissao||0).toFixed(2).replace('.',','),green:true}
+    ],
+    beneficiarios:bens.map(function(b){return{rel:b.relacao||'—',nome:b.nome,pct:b.percentual||''};}),
+    coberturas:cobs.map(function(c){return{nome:c.nome,desc:c.descricao||'',val:c.valor||''};}),
+    documentos:[]
+  };
+  contratoStatus['db']=ct.status||'ativo';
+  openContrato('db');
+}
+
 async function hbCarregarContratosNoPerfil(clienteId) {
   var contratos = await dbListarContratos(clienteId);
   var container = document.getElementById('nccGrid');
@@ -5216,7 +5250,7 @@ async function hbCarregarContratosNoPerfil(clienteId) {
     var vigIni = ct.vigencia_inicio ? (function(d){var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0].slice(2);})(ct.vigencia_inicio) : '—';
     var vigFim = ct.vigencia_fim ? (function(d){var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0].slice(2);})(ct.vigencia_fim) : '—';
     var valor = ct.valor_premio ? 'R$'+parseFloat(ct.valor_premio).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—';
-    return '<div class="ncc">'
+    return '<div class="ncc" style="cursor:pointer" onclick="hbAbrirContratoDB(\''+ct.id+'\')">'
       + '<div class="ncc-top"><span class="ncc-ramo" style="background:'+ramoColor+'22;color:'+ramoColor+'">'+ramo+'</span></div>'
       + '<div class="ncc-seg">'+ct.seguradora+(ct.numero_apolice?' <span style="color:#8696B0;font-size:12px">'+ct.numero_apolice+'</span>':'')+'</div>'
       + '<div class="ncc-statusrow"><span class="ncc-statuslbl">Status</span><span class="ncc-statusval" id="'+stId+'"></span></div>'
@@ -5463,10 +5497,37 @@ async function hbSalvarContratosPDF(){
     var ramoNome=(ramoEl&&ramoEl.value)||item.dados.ramo||'';
     var seg=(segEl&&segEl.value)||item.dados.seguradora||'';
     if(!clienteNome||!seg)continue;
-    // Encontra ou cria cliente
+    // Encontra ou cria cliente com dados completos extraídos
+    var d=item.dados||{};
+    var camposCli={
+      nome:clienteNome,
+      cpf:d.cpf||'',
+      data_nascimento:d.data_nascimento||null,
+      estado_civil:d.estado_civil||null,
+      profissao:d.profissao||'',
+      email:d.email||'',
+      telefone:d.telefone||'',
+      cep:d.cep||'', rua:d.rua||'', numero:d.numero||'',
+      complemento:d.complemento||'', bairro:d.bairro||'',
+      cidade:d.cidade||'', estado:d.estado||'',
+      status:'ativo'
+    };
     var listaC=await dbListarClientes();
     var cm=listaC.find(function(c){return c.nome.toLowerCase()===clienteNome.toLowerCase();});
-    if(!cm) cm=await dbSalvarCliente({nome:clienteNome,cpf:item.dados.cpf||'',status:'ativo'});
+    if(!cm){
+      cm=await dbSalvarCliente(camposCli);
+    } else {
+      // Atualiza apenas campos vazios do cadastro existente
+      var upd={};
+      Object.keys(camposCli).forEach(function(k){
+        if(k==='status'||k==='nome')return;
+        if((!cm[k]||cm[k]==='')&&camposCli[k])upd[k]=camposCli[k];
+      });
+      if(Object.keys(upd).length>0){
+        var atualizado=await dbAtualizarCliente(cm.id,upd);
+        if(atualizado)cm=atualizado;
+      }
+    }
     if(!cm)continue;
     var rm=ramos.find(function(r){return r.nome===ramoNome;});
     function toISO(s){if(!s)return null;var p=s.split('/');if(p.length===3){var y=p[2].length===2?'20'+p[2]:p[2];return y+'-'+p[1]+'-'+p[0];}return null;}
@@ -5530,7 +5591,7 @@ async function extrairTextoPDF(file) {
 
 // Manda o texto para Claude Haiku e retorna dados estruturados
 async function extrairDadosComIA(textoPDF, nomeArquivo) {
-  var prompt = 'Você é um especialista em apólices de seguros brasileiras. Analise o texto abaixo e extraia os dados em JSON.\n\nRetorne APENAS o JSON, sem explicações, sem markdown, sem ```.\n\nFormato:\n{"cliente":"","cpf":"","ramo":"","seguradora":"","apolice":"","vigencia_ini":"DD/MM/AA","vigencia_fim":"DD/MM/AA","valor":"","comissao_pct":"","coberturas":[{"nome":"","valor":""}]}\n\nSe não encontrar um campo, deixe em branco.\nRamos válidos: Seguro de Vida, Plano de Saúde, Seguro Auto, Consórcio, Seg. Residencial\n\nTexto da apólice:\n' + textoPDF.substring(0, 6000);
+  var prompt = 'Você é um especialista em apólices de seguros brasileiras. Analise o texto abaixo e extraia os dados em JSON.\n\nRetorne APENAS o JSON, sem explicações, sem markdown, sem ```.\n\nFormato:\n{"cliente":"","cpf":"","data_nascimento":"AAAA-MM-DD","estado_civil":"","profissao":"","email":"","telefone":"","cep":"","rua":"","numero":"","complemento":"","bairro":"","cidade":"","estado":"UF","ramo":"","seguradora":"","apolice":"","vigencia_ini":"DD/MM/AA","vigencia_fim":"DD/MM/AA","valor":"","comissao_pct":"","coberturas":[{"nome":"","valor":""}]}\n\nSe não encontrar um campo, deixe em branco. IMPORTANTE: se o documento for uma PROPOSTA ou ESTUDO (não apólice emitida), extraia mesmo assim o que houver.\nRamos válidos: Seguro de Vida, Plano de Saúde, Seguro Auto, Consórcio, Seg. Residencial\n\nTexto da apólice:\n' + textoPDF.substring(0, 6000);
 
   var response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -5826,28 +5887,7 @@ function renderWizPdfList(){
 }
 function removeWizFile(i){wcFiles.splice(i,1);renderWizPdfList();}
 
-function buildWizReview(){
-  var rt=document.getElementById("wcReviewTitle");if(rt)rt.textContent="Revisar dados extraídos";
-  var rs=document.getElementById("wcReviewSub");if(rs)rs.textContent="A IA leu os arquivos e extraiu os dados abaixo. Revise e ajuste o que for necessário antes de confirmar.";
-  var container=document.getElementById("wcMultiList");
-  container.innerHTML="";
-  // Dados simulados — em produção viriam da API Claude
-  var extracted=[
-    {file:"Apolice_Azos_Carlos_Mendes.pdf",cliente:"Carlos Mendes",cpf:"342.891.047-22",ramo:"Seguro de Vida",seguradora:"Azos",apolice:"0045812-3",vigencia:"02/01/26 – 02/01/27",valor:"R$289,98",status:"existente"},
-    {file:"Bradesco_Top3_Fernanda.pdf",cliente:"Fernanda Costa",cpf:"198.234.567-88",ramo:"Plano de Saúde",seguradora:"Bradesco",apolice:"B-98234-7",vigencia:"01/03/26 – 01/03/27",valor:"R$1.240,00",status:"existente"},
-    {file:"Seguro_Auto_Ricardo.pdf",cliente:"Ricardo Alves",cpf:"521.087.334-10",ramo:"Seguro Auto",seguradora:"Porto Seguro",apolice:"PS-11293-A",vigencia:"15/04/26 – 15/04/27",valor:"R$198,00",status:"novo"},
-  ];
-  // Usa os arquivos reais se disponíveis
-  var files=wcFiles.length>0?wcFiles.map(function(f){return f.name}):extracted.map(function(d){return d.file});
-  extracted.forEach(function(d,i){
-    var fname=files[i]||d.file;
-    var badgeClass=d.status==="novo"?"novo":"existente";
-    var badgeTxt=d.status==="novo"?"Novo cliente":"Cliente existente";
-    var item=document.createElement("div");item.className="wiz-multi-item";
-    item.innerHTML='<div class="wiz-mi-head" onclick="this.parentElement.querySelector(\'.wiz-mi-body\').style.display=this.parentElement.querySelector(\'.wiz-mi-body\').style.display===\'none\'?\'grid\':\'none\'"><div class="wiz-mi-left"><div class="wiz-mi-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="wiz-mi-file">'+fname+'</div><div class="wiz-mi-info">'+d.ramo+' · '+d.seguradora+'</div></div></div><div class="wiz-mi-right"><span class="wiz-rc-badge '+badgeClass+'">'+badgeTxt+'</span><svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="#8696B0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div><div class="wiz-mi-body" style="display:grid"><div class="wiz-mi-field"><span class="wiz-mi-label">Cliente</span><input class="wiz-mi-input" value="'+d.cliente+'"></div><div class="wiz-mi-field"><span class="wiz-mi-label">CPF</span><input class="wiz-mi-input" value="'+d.cpf+'"></div><div class="wiz-mi-field"><span class="wiz-mi-label">Ramo</span><input class="wiz-mi-input" value="'+d.ramo+'"></div><div class="wiz-mi-field"><span class="wiz-mi-label">Seguradora</span><input class="wiz-mi-input" value="'+d.seguradora+'"></div><div class="wiz-mi-field"><span class="wiz-mi-label">Nº Apólice</span><input class="wiz-mi-input" value="'+d.apolice+'"></div><div class="wiz-mi-field"><span class="wiz-mi-label">Vigência</span><input class="wiz-mi-input" value="'+d.vigencia+'"></div><div class="wiz-mi-field"><span class="wiz-mi-label">Valor mensal</span><input class="wiz-mi-input" value="'+d.valor+'"></div><div class="wiz-mi-field"><span class="wiz-mi-label">Comissão (%)</span><input class="wiz-mi-input" placeholder="Ex: 20%" value="'+(d.comissao||"")+'"></div></div>';
-    container.appendChild(item);
-  });
-}
+/* buildWizReview fake removida — a versão real está acima */
 
 var hbCalInput=null,hbCalY,hbCalM;
 var HB_MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
