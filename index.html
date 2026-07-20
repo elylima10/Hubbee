@@ -3591,7 +3591,7 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
       <div class="nhist">
         <div class="nhist-title" style="display:flex;align-items:center;gap:12px"><div class="card-icon-box"><svg viewBox="0 0 24 24" style="width:28px;height:28px" fill="none" stroke="#8696B0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.43186 14.9656C5.65759 18.4791 9.00032 21 12.9318 21C17.9024 21 21.9318 16.9706 21.9318 12C21.9318 7.02944 17.9024 3 12.9318 3C9.23111 3 5.83124 5.6756 4.62227 8.5"></path><path d="M12.9319 7V12L15.9319 14"></path><path d="M8.43054 8.74363C8.43054 8.74363 4.74691 9.3026 4.1879 8.7436C3.62888 8.1846 4.18791 4.50098 4.18791 4.50098"></path></svg></div>Histórico</div>
         <div class="nhist-list" id="histScroll">
-          <div id="histContainer"><div class="hist-row"><div class="hist-dot hl"></div><div><div class="hist-tx hl">27/05/26 - Se tornou cliente (Seguro de Vida - Azos)</div></div></div>
+          <div class="hist-row"><div class="hist-dot hl"></div><div><div class="hist-tx hl">27/05/26 - Se tornou cliente (Seguro de Vida - Azos)</div></div></div>
           <div class="hist-row"><div class="hist-dot"></div><div><div class="hist-tx">20/05/26 - Reunião agendada - Apresentação Seguro de Vida Azos</div><div class="hist-cm">Cliente gostou da primeira apresentação, apresentação na casa do cliente com a esposa</div></div></div>
           <div class="hist-row"><div class="hist-dot"></div><div><div class="hist-tx">12/05/26 - Lead cadastrado via indicação de Marcos Silva</div></div></div>
         </div>
@@ -5235,7 +5235,7 @@ async function hbCarregarContratosNoPerfil(clienteId) {
 
 async function hbCarregarHistoricoNoPerfil(clienteId) {
   var historico = await dbListarHistorico(clienteId);
-  var container = document.getElementById('histContainer');
+  var container = document.getElementById('histScroll');
   if (!container) return;
   if (historico.length === 0) {
     container.innerHTML = '<div style="color:#8696B0;padding:16px">Nenhuma atividade registrada</div>';
