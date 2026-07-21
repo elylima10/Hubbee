@@ -5165,8 +5165,9 @@ async function hbAbrirPerfil(c) {
 
   // Dados pessoais (aba)
   // Dados pessoais — IDs reais do HTML
+  var nascBR = nasc ? (function(d){var p=String(d).split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d;})(nasc) : '';
   var dpFields = {
-    'pv-nome': nome, 'pv-cpf': cpf, 'pv-nasc': nasc,
+    'pv-nome': nome, 'pv-cpf': cpf, 'pv-nasc': nascBR,
     'pv-ecivil': ecivil, 'pv-prof': prof, 'pv-email': email,
     'pv-tel': tel,
     'pv-cidade': (cidade && estado) ? cidade+'/'+estado : (cidade||estado||'')
@@ -5251,7 +5252,7 @@ async function hbCarregarContratosNoPerfil(clienteId) {
     var vigFim = ct.vigencia_fim ? (function(d){var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0].slice(2);})(ct.vigencia_fim) : '—';
     var valor = ct.valor_premio ? 'R$'+parseFloat(ct.valor_premio).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—';
     return '<div class="ncc" style="cursor:pointer" onclick="hbAbrirContratoDB(\''+ct.id+'\')">'
-      + '<div class="ncc-top"><span class="ncc-ramo" style="background:'+ramoColor+'22;color:'+ramoColor+'">'+ramo+'</span></div>'
+      + '<div class="ncc-top"><span style="display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:-0.02em;background:'+ramoColor+'22;color:'+ramoColor+'">'+ramo+'</span></div>'
       + '<div class="ncc-seg">'+ct.seguradora+(ct.numero_apolice?' <span style="color:#8696B0;font-size:12px">'+ct.numero_apolice+'</span>':'')+'</div>'
       + '<div class="ncc-statusrow"><span class="ncc-statuslbl">Status</span><span class="ncc-statusval" id="'+stId+'"></span></div>'
       + '<div class="ncc-cols">'
@@ -5536,8 +5537,18 @@ async function hbSalvarContratosPDF(){
     var premio=parseMoeda((valorEl&&valorEl.value)||item.dados.valor||'');
     var comPct=parsePct((comEl&&comEl.value)||item.dados.comissao_pct||'');
     var cobs=(item.dados.coberturas||[]).map(function(c){return{nome:c.nome,valor:c.valor};});
-    var campos={cliente_id:cm.id,ramo_id:rm?rm.id:null,seguradora:seg,numero_apolice:(apoliceEl&&apoliceEl.value)||item.dados.apolice||'',vigencia_inicio:toISO(item.dados.vigencia_ini),vigencia_fim:toISO(item.dados.vigencia_fim),valor_premio:premio,comissao_pct:comPct,valor_comissao:premio*comPct/100,status:'ativo'};
-    var novo=await dbSalvarContrato(campos,[],cobs);
+    function val(cls){var el=document.querySelector('.'+cls+'[data-idx="'+i+'"]');return (el&&el.value)||'';}
+    var bens=(item.dados.beneficiarios||[]).filter(function(b){return b&&b.nome;}).map(function(b){return{relacao:b.relacao||'',nome:b.nome,percentual:b.percentual||''};});
+    var sexoV=val('wc-ext-sexo')||d.sexo||'';
+    var rendaV=val('wc-ext-renda');
+    if(sexoV||rendaV){
+      var updExtra={};
+      if(sexoV&&!cm.sexo)updExtra.sexo=sexoV;
+      if(rendaV)updExtra.renda=rendaV;
+      if(Object.keys(updExtra).length>0)await dbAtualizarCliente(cm.id,updExtra);
+    }
+    var campos={cliente_id:cm.id,ramo_id:rm?rm.id:null,seguradora:seg,numero_apolice:(apoliceEl&&apoliceEl.value)||item.dados.apolice||'',modalidade:val('wc-ext-modalidade')||item.dados.modalidade||'',periodicidade:val('wc-ext-period')||item.dados.periodicidade||'',forma_pagamento:val('wc-ext-pgto')||item.dados.forma_pagamento||'',vigencia_inicio:toISO(item.dados.vigencia_ini),vigencia_fim:toISO(item.dados.vigencia_fim),valor_premio:premio,comissao_pct:comPct,valor_comissao:premio*comPct/100,status:'ativo'};
+    var novo=await dbSalvarContrato(campos,bens,cobs);
     if(novo){
       await dbRegistrarHistorico(cm.id,'Contrato importado via PDF — '+seg,'contrato');
       salvos++;
@@ -5591,7 +5602,7 @@ async function extrairTextoPDF(file) {
 
 // Manda o texto para Claude Haiku e retorna dados estruturados
 async function extrairDadosComIA(textoPDF, nomeArquivo) {
-  var prompt = 'Você é um especialista em apólices de seguros brasileiras. Analise o texto abaixo e extraia os dados em JSON.\n\nRetorne APENAS o JSON, sem explicações, sem markdown, sem ```.\n\nFormato:\n{"cliente":"","cpf":"","data_nascimento":"AAAA-MM-DD","estado_civil":"","profissao":"","email":"","telefone":"","cep":"","rua":"","numero":"","complemento":"","bairro":"","cidade":"","estado":"UF","ramo":"","seguradora":"","apolice":"","vigencia_ini":"DD/MM/AA","vigencia_fim":"DD/MM/AA","valor":"","comissao_pct":"","coberturas":[{"nome":"","valor":""}]}\n\nSe não encontrar um campo, deixe em branco. IMPORTANTE: se o documento for uma PROPOSTA ou ESTUDO (não apólice emitida), extraia mesmo assim o que houver.\nRamos válidos: Seguro de Vida, Plano de Saúde, Seguro Auto, Consórcio, Seg. Residencial\n\nTexto da apólice:\n' + textoPDF.substring(0, 6000);
+  var prompt = 'Você é um especialista em apólices de seguros brasileiras. Analise o texto abaixo e extraia os dados em JSON.\n\nRetorne APENAS o JSON, sem explicações, sem markdown, sem ```.\n\nFormato:\n{"cliente":"","cpf":"","sexo":"","data_nascimento":"AAAA-MM-DD","estado_civil":"","profissao":"","email":"","telefone":"","cep":"","rua":"","numero":"","complemento":"","bairro":"","cidade":"","estado":"UF","ramo":"","seguradora":"","apolice":"","modalidade":"","periodicidade":"","forma_pagamento":"","vigencia_ini":"DD/MM/AA","vigencia_fim":"DD/MM/AA","valor":"","comissao_pct":"","beneficiarios":[{"relacao":"","nome":"","percentual":""}],"coberturas":[{"nome":"","valor":""}]}\n\nSe não encontrar um campo, deixe em branco. IMPORTANTE: se o documento for uma PROPOSTA ou ESTUDO (não apólice emitida), extraia mesmo assim o que houver.\nRamos válidos: Seguro de Vida, Plano de Saúde, Seguro Auto, Consórcio, Seg. Residencial\n\nTexto da apólice:\n' + textoPDF.substring(0, 6000);
 
   var response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -5749,6 +5760,11 @@ function buildWizReview() {
         '<div class="wiz-mi-field"><span class="wiz-mi-label">Vigência</span><input class="wiz-mi-input" value="' + vigencia + '"></div>' +
         '<div class="wiz-mi-field"><span class="wiz-mi-label">Valor mensal</span><input class="wiz-mi-input wc-ext-valor" data-idx="' + idx + '" value="' + (d.valor||'') + '"></div>' +
         '<div class="wiz-mi-field"><span class="wiz-mi-label">Comissão (%)</span><input class="wiz-mi-input wc-ext-com" data-idx="' + idx + '" value="' + (d.comissao_pct||'') + '"></div>' +
+        '<div class="wiz-mi-field"><span class="wiz-mi-label">Modalidade</span><input class="wiz-mi-input wc-ext-modalidade" data-idx="' + idx + '" placeholder="Ex: Vida Individual" value="' + (d.modalidade||'') + '"></div>' +
+        '<div class="wiz-mi-field"><span class="wiz-mi-label">Periodicidade</span><input class="wiz-mi-input wc-ext-period" data-idx="' + idx + '" placeholder="Ex: Mensal" value="' + (d.periodicidade||'') + '"></div>' +
+        '<div class="wiz-mi-field"><span class="wiz-mi-label">Forma de pagamento</span><input class="wiz-mi-input wc-ext-pgto" data-idx="' + idx + '" placeholder="Ex: Cartão de crédito" value="' + (d.forma_pagamento||'') + '"></div>' +
+        '<div class="wiz-mi-field"><span class="wiz-mi-label">Sexo</span><input class="wiz-mi-input wc-ext-sexo" data-idx="' + idx + '" value="' + (d.sexo||'') + '"></div>' +
+        '<div class="wiz-mi-field"><span class="wiz-mi-label">Renda mensal</span><input class="wiz-mi-input wc-ext-renda" data-idx="' + idx + '" placeholder="Preencha manualmente" value=""></div>' +
         cobSection +
       '</div>';
     container.appendChild(item_el);
