@@ -1884,7 +1884,7 @@ table.cw-table td{padding:14px 16px;font-size:14px;letter-spacing:-0.04em;vertic
 .nhist-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 /* ═══ PÁGINA CONTRATO: TÍTULO + STATS ═══ */
 .nct-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:30px;flex-wrap:wrap}
-.nct-titlerow{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.nct-titlerow{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .nct-seg{font-size:38px;font-weight:400;letter-spacing:-0.04em;color:#F0F0F2;line-height:1}
 .nct-apolice{font-size:14px;color:#8696B0;letter-spacing:-0.04em}
 .nct-ramotag{margin-top:12px;display:inline-block}
@@ -3517,16 +3517,17 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
           </div>
         </div>
       </div>
-      <div class="pacts">
+      <div class="pacts" style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
         <button class="btnadd" onclick="navTo('novo-contrato',null)">
           <svg width="17" height="17" viewBox="0 0 17 17" fill="none"><path d="M7 1.5C7 0.671573 7.67157 0 8.5 0C9.32843 0 10 0.671573 10 1.5V15.5C10 16.3284 9.32843 17 8.5 17C7.67157 17 7 16.3284 7 15.5V1.5Z" fill="#151A1D"/><path d="M1.5 10C0.671573 10 1.01779e-07 9.32843 6.55671e-08 8.5C2.93554e-08 7.67157 0.671573 7 1.5 7H6.5C7.32843 7 8 7.67157 8 8.5C8 9.32843 7.32843 10 6.5 10H1.5Z" fill="#151A1D"/><path d="M13.5 10C12.6716 10 12 9.32843 12 8.5C12 7.67157 12.6716 7 13.5 7H15.5C16.3284 7 17 7.67157 17 8.5C17 9.32843 16.3284 10 15.5 10H13.5Z" fill="#151A1D"/></svg>
           Novo contrato
         </button>
-        <div class="maisacoes-wrap" style="position:relative;margin-top:10px">
-          <button class="ct-back" id="pfAcoesBtn" onclick="togglePfAcoes(event)" style="width:100%;justify-content:center">
-            Mais ações
-            <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="#8696B0" stroke-width="1.5" stroke-linecap="round"/></svg>
-          </button>
+        <div class="maisacoes-wrap" style="position:relative">
+          <button class="maisacoes-btn" id="pfAcoesBtn" onclick="togglePfAcoes(event)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8696B0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12Z"/><path d="M12 12.25V12M12 17.25V17M12 7.25V7M12 12.5C11.7239 12.5 11.5 12.2761 11.5 12C11.5 11.7239 11.7239 11.5 12 11.5C12.2761 11.5 12.5 11.7239 12.5 12C12.5 12.2761 12.2761 12.5 12 12.5ZM12 17.5C11.7239 17.5 11.5 17.2761 11.5 17C11.5 16.7239 11.7239 16.5 12 16.5C12.2761 16.5 12.5 16.7239 12.5 17C12.5 17.2761 12.2761 17.5 12 17.5ZM12 7.5C11.7239 7.5 11.5 7.27614 11.5 7C11.5 6.72386 11.7239 6.5 12 6.5C12.2761 6.5 12.5 6.72386 12.5 7C12.5 7.27614 12.2761 7.5 12 7.5Z"/></svg>
+          Mais ações
+          <span class="ma-chev"><svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M0.194931 1.59234C-0.132603 1.14762 -0.0377285 0.522462 0.407001 0.19493C0.851733 -0.132601 1.47801 -0.0377271 1.80555 0.406997L1.80667 0.408113L1.83457 0.447178C1.8552 0.474853 1.8862 0.516016 1.9261 0.568838C2.00601 0.674637 2.12275 0.82692 2.26541 1.00972C2.55152 1.37631 2.94042 1.86224 3.35925 2.34462C3.78253 2.83214 4.21685 3.29395 4.5926 3.62596C4.75815 3.77221 4.89523 3.87599 5 3.94406C5.10478 3.876 5.24185 3.77221 5.4074 3.62596C5.78315 3.29396 6.21747 2.83214 6.64076 2.34462C7.05958 1.86224 7.44849 1.37632 7.73459 1.00972C7.87725 0.826919 7.994 0.674637 8.07391 0.568838C8.1138 0.516019 8.14481 0.474851 8.16543 0.447178L8.19334 0.408113L8.19445 0.406997C8.52198 -0.0377325 9.14826 -0.132599 9.593 0.194929C10.0377 0.522458 10.1326 1.14762 9.80507 1.59234V1.59346C9.80458 1.59412 9.80368 1.59567 9.80284 1.59681C9.80115 1.5991 9.79811 1.60269 9.79503 1.60685C9.78887 1.61516 9.78064 1.62742 9.76935 1.64257C9.74634 1.67344 9.71263 1.71785 9.67002 1.77427C9.5847 1.88723 9.46172 2.04751 9.31173 2.23971C9.0126 2.62301 8.60011 3.13761 8.15092 3.65498C7.70605 4.16736 7.20528 4.70584 6.73228 5.12383C6.49698 5.33173 6.24451 5.53136 5.99115 5.68413C5.79329 5.80341 5.49668 5.9561 5.15068 5.99219L5 6L4.84932 5.99219C4.50332 5.9561 4.2067 5.8034 4.00885 5.68413C3.7555 5.53136 3.50302 5.33173 3.26772 5.12383C2.79473 4.70585 2.29396 4.16736 1.84908 3.65498C1.3999 3.13762 0.987405 2.623 0.688274 2.23971C0.538283 2.04751 0.4153 1.88722 0.329986 1.77427C0.287368 1.71785 0.253657 1.67344 0.230648 1.64257C0.219358 1.62742 0.211129 1.61516 0.204976 1.60685C0.201892 1.60269 0.198856 1.5991 0.197163 1.59681L0.194931 1.59346V1.59234Z" fill="#8696B0"/></svg></span>
+        </button>
           <div class="maisacoes-menu" id="pfAcoesMenu">
             <button class="ma-item" onclick="closePfAcoes();hbInativarCliente()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/></svg>
@@ -4586,6 +4587,10 @@ function openEditContratoModal(section){
       +'<div class="ar-field"><label>Fim da vigência</label><input type="text" id="ceditVigFim" value="'+d.vigFim+'"></div>';
     body.innerHTML=topFields+d.info.map(function(f,i){
       if(f.l==='Valor Comissão')return'';// calculado automaticamente
+      if(f.l==='Forma de pagamento'){
+        var fps=['Débito em Conta','Cartão de Crédito','Pix','Boleto'];
+        return'<div class="ar-field"><label>'+f.l+'</label><select id="cedit_'+i+'">'+fps.map(function(o){return'<option value="'+o+'"'+(f.v===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select></div>';
+      }
       if(f.l==='Periocidade'){
         return'<div class="ar-field"><label>'+f.l+'</label><select id="cedit_'+i+'"><option value="Mensal"'+(f.v==='Mensal'?' selected':'')+'>Mensal</option><option value="Anual"'+(f.v==='Anual'?' selected':'')+'>Anual</option></select></div>';
       }
@@ -4636,6 +4641,7 @@ function closeEditContratoModal(){document.getElementById("ctEditModalOverlay").
 function saveEditContrato(){
   // Dados pessoais / Endereço (página do cliente)
   if(currentEditSection&&currentEditSection.indexOf('pdata')===0){
+    try{
     var cfg=pdataFields[currentEditSection];
     if(cfg)cfg.ids.forEach(function(f){
       var inp=document.getElementById('pedit_'+f[0]);if(!inp)return;
@@ -4679,6 +4685,7 @@ function saveEditContrato(){
       Object.keys(upd).forEach(function(k){if(upd[k]===null||upd[k]===undefined)delete upd[k];});
       dbAtualizarCliente(_perfilClienteId,upd);
     }
+    }catch(e){console.error('saveEditContrato pdata:',e);}
     closeEditContratoModal();
     showToast('Alterações salvas');
     return;
@@ -5355,7 +5362,7 @@ async function hbCarregarContratosNoPerfil(clienteId) {
     return '<div class="ncc" style="cursor:pointer" onclick="hbAbrirContratoDB(\''+ct.id+'\')">'
       + '<div class="ncc-top" style="display:flex;justify-content:space-between;align-items:flex-start"><span style="display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:-0.02em;background:'+ramoColor+'22;color:'+ramoColor+'">'+ramo+'</span><span style="opacity:.85"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.43936 0.00131747C9.55469 -0.00682357 10.7446 0.0211267 11.747 0.1312C12.2461 0.186016 12.7347 0.265024 13.1601 0.383153C13.493 0.47563 13.9326 0.629543 14.2938 0.923193L14.4433 1.05698L14.5771 1.2064C14.8707 1.56761 15.0246 2.00722 15.1171 2.34018C15.2352 2.76551 15.3142 3.25417 15.369 3.75327C15.4791 4.75567 15.5071 5.94556 15.4989 7.06089C15.4907 8.18325 15.445 9.26445 15.4022 10.0628C15.3808 10.4628 15.3603 10.7943 15.3446 11.0257C15.3368 11.1411 15.3306 11.2318 15.3261 11.2943C15.3238 11.3255 15.3215 11.35 15.3202 11.3666C15.3196 11.3748 15.3196 11.3816 15.3192 11.3861C15.3191 11.3882 15.3184 11.3898 15.3183 11.391V11.3929C15.2644 12.0812 14.6628 12.5962 13.9745 12.5423C13.2864 12.4884 12.7724 11.8867 12.8261 11.1986V11.1937C12.8263 11.1903 12.8275 11.1851 12.828 11.1781C12.8291 11.1636 12.8308 11.1415 12.8329 11.1126C12.8372 11.0545 12.843 10.9675 12.8505 10.8568C12.8654 10.6353 12.8855 10.3166 12.9062 9.93003C12.9476 9.15496 12.9911 8.11398 12.9989 7.04233C13.0058 6.09697 12.9798 5.15342 12.911 4.35581L2.13369 15.1341C1.64554 15.6223 0.854271 15.6223 0.366116 15.1341C-0.122038 14.646 -0.122039 13.8547 0.366116 13.3666L11.1435 2.58823C10.3461 2.51951 9.40286 2.49442 8.45791 2.50132C7.38626 2.50914 6.34529 2.55263 5.57022 2.59409C5.18369 2.61477 4.86492 2.63481 4.64346 2.64976C4.53273 2.65723 4.44574 2.66308 4.3876 2.66733C4.35875 2.66944 4.33661 2.67112 4.32217 2.67222C4.31514 2.67275 4.30995 2.67391 4.30655 2.67417H4.30166C3.6136 2.72784 3.01186 2.21378 2.95791 1.52573C2.90408 0.837478 3.41907 0.235818 4.10733 0.181982H4.10928C4.11047 0.181889 4.11207 0.181166 4.11416 0.181005C4.11861 0.180662 4.1254 0.180657 4.13369 0.180028C4.15028 0.178772 4.17475 0.176453 4.20596 0.174169C4.26842 0.169598 4.35919 0.163398 4.47451 0.155614C4.70593 0.139997 5.03743 0.119395 5.43741 0.0979972C6.23579 0.0552906 7.31699 0.00951506 8.43936 0.00131747Z" fill="#8696B0"/></svg></span></div>'
       + '<div class="ncc-seg">'+ct.seguradora+'</div>'
-      + (ct.numero_apolice?'<div style="color:#8696B0;font-size:12px;letter-spacing:-0.02em;margin-top:2px">'+ct.numero_apolice+'</div>':'')
+
       + '<div class="ncc-statusrow"><span class="ncc-statuslbl">Status</span><span class="ncc-statusval" id="'+stId+'"></span></div>'
       + '<div class="ncc-cols">'
       + '<div><div class="ncc-col-lbl">Valor mensal</div><div class="ncc-col-val">'+valor+'</div></div>'
