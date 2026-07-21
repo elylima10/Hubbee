@@ -3616,6 +3616,8 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
             <div class="pdata-item"><span class="pdata-lbl">Data de nascimento</span><span class="pdata-vl" id="pv-nasc">14/03/1985</span><input class="pdata-inp" id="pi-nasc" value="14/03/1985" style="display:none"></div>
             <div class="pdata-item"><span class="pdata-lbl">Profissão</span><span class="pdata-vl" id="pv-prof">Engenheiro Civil</span><input class="pdata-inp" id="pi-prof" value="Engenheiro Civil" style="display:none"></div>
             <div class="pdata-item"><span class="pdata-lbl">Estado civil</span><span class="pdata-vl" id="pv-ecivil">Casado</span><input class="pdata-inp" id="pi-ecivil" value="Casado" style="display:none"></div>
+            <div class="pdata-item"><span class="pdata-lbl">Sexo</span><span class="pdata-vl" id="pv-sexo">—</span><input class="pdata-inp" id="pi-sexo" value="" style="display:none"></div>
+            <div class="pdata-item"><span class="pdata-lbl">Renda mensal</span><span class="pdata-vl" id="pv-renda">—</span><input class="pdata-inp" id="pi-renda" value="" style="display:none"></div>
             <div class="pdata-item"><span class="pdata-lbl">E-mail</span><span class="pdata-vl" id="pv-email">carlos.mendes@email.com</span><input class="pdata-inp" id="pi-email" value="carlos.mendes@email.com" style="display:none"></div>
             <div class="pdata-item" style="grid-column:1/-1"><span class="pdata-lbl">Telefone</span><span class="pdata-vl" id="pv-tel">(11) 98745-3321</span><input class="pdata-inp" id="pi-tel" value="(11) 98745-3321" style="display:none"></div>
           </div>
@@ -5168,6 +5170,7 @@ async function hbAbrirPerfil(c) {
   var nascBR = nasc ? (function(d){var p=String(d).split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d;})(nasc) : '';
   var dpFields = {
     'pv-nome': nome, 'pv-cpf': cpf, 'pv-nasc': nascBR,
+    'pv-sexo': raw.sexo || '', 'pv-renda': raw.renda || '',
     'pv-ecivil': ecivil, 'pv-prof': prof, 'pv-email': email,
     'pv-tel': tel,
     'pv-cidade': (cidade && estado) ? cidade+'/'+estado : (cidade||estado||'')
@@ -5287,7 +5290,32 @@ async function hbCarregarHistoricoNoPerfil(clienteId) {
   }).join('');
 }
 
+var _currentPg='dash';
+var _hashNav=false;
+window.addEventListener('popstate', function(){
+  var pg=(location.hash||'').replace('#','')||'dash';
+  if(pg===_currentPg) return;
+  _hashNav=true;
+  try{
+    var ni=document.querySelector('.ni[onclick*="\''+pg+'\'"]');
+    navTo(pg, ni||null);
+  } finally { _hashNav=false; }
+});
+window.addEventListener('hashchange', function(){
+  var pg=(location.hash||'').replace('#','')||'dash';
+  if(pg===_currentPg) return;
+  _hashNav=true;
+  try{
+    var ni=document.querySelector('.ni[onclick*="\''+pg+'\'"]');
+    navTo(pg, ni||null);
+  } finally { _hashNav=false; }
+});
 function navTo(pg,navEl){
+  _currentPg=pg;
+  if(!_hashNav){
+    var h='#'+pg;
+    if(location.hash!==h){ try{ history.pushState(null,'',h); }catch(e){ location.hash=h; } }
+  }
   document.querySelectorAll(".page").forEach(function(p){p.classList.remove("on")});
   document.querySelectorAll(".nav-item").forEach(function(n){n.classList.remove("active")});
   var p=document.getElementById("pg-"+pg);
@@ -5317,6 +5345,7 @@ function navTo(pg,navEl){
   closeSidebar();
   closeMobileSheet();
   if(pg==="clientes"){hbRenderClientes(null);}
+  if(pg==="dash"&&HB.user){hbRenderDashboard();}
   if(pg==="carteira"){cwResetReport();}
   if(pg==="perfil"){
     var perfil=document.getElementById("pg-perfil");
@@ -6363,6 +6392,11 @@ async function hbSalvarContratoBanco(){
       var sc=document.getElementById('authScreen');
       if(sc){sc.classList.add('hide');setTimeout(function(){sc.style.display='none';},500);}
       hbRenderDashboard();
+      var pgHash=(location.hash||'').replace('#','');
+      if(pgHash&&pgHash!=='dash'){
+        var ni=document.querySelector('.ni[onclick*="\''+pgHash+'\'"]');
+        navTo(pgHash, ni||null);
+      }
     });
   });
 })();
