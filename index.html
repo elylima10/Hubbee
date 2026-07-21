@@ -2755,7 +2755,7 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
       </div>
     </div>
     <div class="topbar-search" id="topbarSearch" onclick="this.querySelector('input').focus()">
-      <input type="text" placeholder="Buscar por cliente ou CPF">
+      <input type="text" id="globalSearch" placeholder="Buscar por cliente ou CPF" oninput="hbGlobalSearch(this.value)">
       <svg width="17" height="17" viewBox="0 0 17 17" fill="none"><path d="M14.0376 7.71875C14.0376 4.23089 11.2094 1.40341 7.7207 1.40341C4.23195 1.40341 1.40376 4.23089 1.40376 7.71875C1.40376 11.2066 4.23195 14.0341 7.7207 14.0341C11.2094 14.0341 14.0376 11.2066 14.0376 7.71875ZM15.4414 7.71875C15.4414 11.9817 11.9847 15.4375 7.7207 15.4375C3.45668 15.4375 0 11.9817 0 7.71875C0 3.4558 3.45668 0 7.7207 0C11.9847 0 15.4414 3.4558 15.4414 7.71875Z" fill="currentColor"/><path d="M15.0176 13.0368C15.7496 13.038 16.4706 13.2918 16.818 13.9404C17.1659 14.5901 16.9771 15.3326 16.5721 15.9423C16.1486 16.5797 15.5077 17.0899 14.7361 16.9867C13.9644 16.8833 13.4804 16.2225 13.2391 15.4946L13.2382 15.4937C13.0404 14.895 13.0956 14.2665 13.4502 13.7742C13.8047 13.2821 14.3821 13.033 15.0121 13.0368H15.0148L15.0185 13.0359L15.0176 13.0368Z" fill="currentColor"/></svg>
     </div>
   </div>
@@ -3165,7 +3165,7 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
   <div class="page" id="pg-clientes">
     <!-- Mobile search (only visible ≤960px) -->
     <div class="cl-mob-search">
-      <input type="text" placeholder="Buscar por cliente ou CPF">
+      <input type="text" placeholder="Buscar por cliente ou CPF" oninput="hbGlobalSearch(this.value)">
       <button class="cl-mob-search-btn" aria-label="Buscar">
         <svg width="17" height="17" viewBox="0 0 17 17" fill="none"><path d="M14.0376 7.71875C14.0376 4.23089 11.2094 1.40341 7.7207 1.40341C4.23195 1.40341 1.40376 4.23089 1.40376 7.71875C1.40376 11.2066 4.23195 14.0341 7.7207 14.0341C11.2094 14.0341 14.0376 11.2066 14.0376 7.71875ZM15.4414 7.71875C15.4414 11.9817 11.9847 15.4375 7.7207 15.4375C3.45668 15.4375 0 11.9817 0 7.71875C0 3.4558 3.45668 0 7.7207 0C11.9847 0 15.4414 3.4558 15.4414 7.71875Z" fill="#F0F0F2"/><path d="M13.2391 15.4946L13.2382 15.4937C13.0404 14.895 13.0956 14.2665 13.4502 13.7742C13.8047 13.2821 14.3821 13.033 15.0121 13.0368H15.0148L15.0185 13.0359L15.0176 13.0368C15.7496 13.038 16.4706 13.2918 16.818 13.9404C17.1659 14.5901 16.9771 15.3326 16.5721 15.9423C16.1486 16.5797 15.5077 17.0899 14.7361 16.9867C13.9644 16.8833 13.4804 16.2225 13.2391 15.4946Z" fill="#F0F0F2"/></svg>
       </button>
@@ -4036,7 +4036,7 @@ async function dbAtualizarCliente(id, campos) {
   return r.error ? null : r.data;
 }
 async function dbListarContratos(clienteId) {
-  var q = _supa.from('contratos').select('*, ramos(nome,cor), clientes(nome)').order('created_at', { ascending: false });
+  var q = _supa.from('contratos').select('*, ramos(nome,cor,slug), clientes(nome)').order('created_at', { ascending: false });
   if (clienteId) q = q.eq('cliente_id', clienteId);
   var r = await q; return r.data || [];
 }
@@ -4058,13 +4058,68 @@ async function dbRegistrarHistorico(clienteId, desc, tipo, comentario) {
 }
 async function dbListarHistorico(clienteId) { var r = await _supa.from('historico').select('*').eq('cliente_id', clienteId).order('data', { ascending: false }); return r.data || []; }
 async function dbListarRamos() { var r = await _supa.from('ramos').select('*').order('nome'); return r.data || []; }
-async function dbMetricas() {
-  var contratos = await dbListarContratos(); var clientes = await dbListarClientes();
-  var ativos = contratos.filter(function(c){ return c.status === 'ativo'; });
-  var hoje = new Date(); var em60 = new Date(); em60.setDate(em60.getDate() + 60);
-  var vencendo = contratos.filter(function(c){ if (!c.vigencia_fim) return false; var d = new Date(c.vigencia_fim); return d >= hoje && d <= em60; });
-  var comissaoMensal = ativos.reduce(function(a, c){ return a + (parseFloat(c.valor_comissao)||0); }, 0);
-  return { totalClientes: clientes.filter(function(c){ return c.status !== 'cancelado'; }).length, clientesCancelados: clientes.filter(function(c){ return c.status === 'cancelado'; }).length, contratosAtivos: ativos.length, contratosRenovar: contratos.filter(function(c){ return c.status === 'renovar'; }).length, renovacoesProximas: vencendo.length, comissaoMensal: comissaoMensal, contratos: contratos, clientes: clientes };
+async function dbMetricas(){
+  var contratos=await dbListarContratos();
+  var clientes=await dbListarClientes();
+  var ramos=await dbListarRamos();
+  var rHist=await _supa.from('historico').select('*').order('created_at',{ascending:false}).limit(4);
+  var historico=rHist.data||[];
+  var ativos=contratos.filter(function(c){return c.status==='ativo';});
+  var hoje=new Date();hoje.setHours(0,0,0,0);
+  var em60=new Date(hoje);em60.setDate(em60.getDate()+60);
+  function dtISO(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+  var alertas=[];
+  contratos.forEach(function(c){
+    if(c.status!=='ativo'||!c.vigencia_fim)return;
+    var d=dtISO(c.vigencia_fim);
+    if(d>=hoje&&d<=em60){
+      var cli=clientes.find(function(x){return x.id===c.cliente_id;});
+      alertas.push({nome:cli?cli.nome:'—',sub:(c.ramos?c.ramos.nome:'')+' - '+c.seguradora,dias:Math.round((d-hoje)/86400000)});
+    }
+  });
+  alertas.sort(function(a,b){return a.dias-b.dias;});
+  var mesIni=new Date(hoje.getFullYear(),hoje.getMonth(),1);
+  function noMes(ts){if(!ts)return false;return new Date(ts)>=mesIni;}
+  var comissaoMensal=0,receitaMensal=0,porRamo={};
+  ativos.forEach(function(c){
+    var com=parseFloat(c.valor_comissao)||0,prem=parseFloat(c.valor_premio)||0;
+    comissaoMensal+=com;receitaMensal+=prem;
+    var rid=c.ramo_id||'outros';
+    if(!porRamo[rid])porRamo[rid]={nome:c.ramos?c.ramos.nome:'Outros',cor:c.ramos?c.ramos.cor:'#8696B0',slug:c.ramos?c.ramos.slug:'outros',comissao:0,receita:0,contratos:0,cli:{},venc:0};
+    var pr=porRamo[rid];pr.comissao+=com;pr.receita+=prem;pr.contratos++;pr.cli[c.cliente_id]=1;
+    if(c.vigencia_fim){var d2=dtISO(c.vigencia_fim);if(d2>=hoje&&d2<=em60)pr.venc++;}
+  });
+  var em30=new Date(hoje);em30.setDate(em30.getDate()+30);
+  var aniv=[];
+  clientes.forEach(function(c){
+    if(!c.data_nascimento||c.status==='cancelado')return;
+    var p=c.data_nascimento.split('-');
+    var prox=new Date(hoje.getFullYear(),+p[1]-1,+p[2]);
+    if(prox<hoje)prox.setFullYear(prox.getFullYear()+1);
+    if(prox<=em30)aniv.push({nome:c.nome,data:prox,idade:prox.getFullYear()-(+p[0]),tel:c.telefone||'',email:c.email||''});
+  });
+  aniv.sort(function(a,b){return a.data-b.data;});
+  var anivAp=[];
+  contratos.forEach(function(c){
+    if(c.status!=='ativo'||!c.vigencia_inicio)return;
+    var p=c.vigencia_inicio.split('-');
+    var prox=new Date(hoje.getFullYear(),+p[1]-1,+p[2]);
+    if(prox<hoje)prox.setFullYear(prox.getFullYear()+1);
+    var anos=prox.getFullYear()-(+p[0]);
+    if(anos<1||prox>em30)return;
+    var cli=clientes.find(function(x){return x.id===c.cliente_id;});
+    anivAp.push({nome:cli?cli.nome:'—',ramo:c.ramos?c.ramos.nome:'',data:prox,anos:anos});
+  });
+  anivAp.sort(function(a,b){return a.data-b.data;});
+  return {clientes:clientes,contratos:contratos,ramos:ramos,
+    totalClientes:clientes.filter(function(c){return c.status!=='cancelado';}).length,
+    clientesCancelados:clientes.filter(function(c){return c.status==='cancelado';}).length,
+    contratosAtivos:ativos.length,
+    comissaoMensal:comissaoMensal,receitaMensal:receitaMensal,
+    renovacoesProximas:alertas.length,
+    novosClientes:clientes.filter(function(c){return noMes(c.created_at);}).length,
+    novosContratos:contratos.filter(function(c){return noMes(c.created_at);}).length,
+    alertas:alertas,historico:historico,porRamo:porRamo,aniv:aniv,anivAp:anivAp};
 }
 </script>
 <script>
@@ -6448,14 +6503,117 @@ function auFinish(){
 // ═══════════════════════════════════════════════════════════
 //  HUBBEE — Integração banco de dados
 // ═══════════════════════════════════════════════════════════
+var _M=null;
+var MESES_PT=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+function fmtBRL(v){return 'R$ '+(+v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtBRL0(v){return 'R$'+Math.round(+v).toLocaleString('pt-BR');}
+function relDia(dt){
+  var hoje=new Date();hoje.setHours(0,0,0,0);
+  var d=Math.round((dt-hoje)/86400000);
+  if(d===0)return 'hoje';if(d===1)return 'amanhã';return 'daqui '+d+' dias';
+}
+function subHTML(txt,verde){
+  var svg='<svg class="trend-svg" viewBox="0 0 24 24" fill="none"><path d="M4 15L10 9L14 13L20 7" stroke="'+(verde?'#16A34A':'#8696B0')+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  return svg+txt;
+}
 function hbRenderDashboard(){
   dbMetricas().then(function(m){
+    _M=m;
+    // TL/TC dinâmicos por ramo
+    var slugFix={consorcio:'cons',residencial:'rc'};
+    (m.ramos||[]).forEach(function(r){
+      var tg=slugFix[r.slug]||r.slug;
+      r._tag=tg;
+      if(typeof TC!=='undefined'&&!TC[tg])TC[tg]='tag-plus';
+      if(typeof TL!=='undefined'&&!TL[tg])TL[tg]=r.nome.replace('Seguro de ','').replace('Plano de ','').replace('Seg. ','');
+    });
+    // KPIs
     var cards=document.querySelectorAll('.metric-card');
-    if(cards[0]) cards[0].querySelector('.metric-value').textContent=m.totalClientes;
-    if(cards[1]) cards[1].querySelector('.metric-value').textContent=m.contratosAtivos;
-    if(cards[2]) cards[2].querySelector('.metric-value').textContent='R$ '+m.comissaoMensal.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-    if(cards[3]) cards[3].querySelector('.metric-value').textContent=m.renovacoesProximas;
-    hbRenderClientes(m.clientes, m.contratos);
+    function setKpi(i,val,sub,verde){
+      if(!cards[i])return;
+      var v=cards[i].querySelector('.metric-value');if(v)v.textContent=val;
+      var s=cards[i].querySelector('.metric-sub');if(s)s.innerHTML=subHTML(sub,verde);
+    }
+    setKpi(0,m.totalClientes,'+'+m.novosClientes+' nesse mês',m.novosClientes>0);
+    setKpi(1,m.contratosAtivos,'+'+m.novosContratos+' nesse mês',m.novosContratos>0);
+    setKpi(2,fmtBRL(m.comissaoMensal),fmtBRL(m.receitaMensal)+' de prêmio em carteira',false);
+    setKpi(3,m.renovacoesProximas,'nos próximos 60 dias',false);
+    // Alertas de renovação
+    var al=document.getElementById('dashAlertList');
+    if(al){
+      al.innerHTML=m.alertas.length===0
+        ? '<div style="color:#8696B0;padding:14px 0">Nenhuma renovação nos próximos 60 dias 🎉</div>'
+        : m.alertas.slice(0,4).map(function(a){
+            var cls=a.dias<=15?'tag-red':'tag-orange';
+            return '<div class="alert-row"><div><div class="contact-name">'+a.nome+'</div><div class="contact-sub">'+a.sub+'</div></div><span class="tag-pill '+cls+'">Vence em '+a.dias+' dia'+(a.dias===1?'':'s')+'</span></div>';
+          }).join('');
+    }
+    // Atividade recente
+    var av=document.getElementById('dashAtivList');
+    if(av){
+      var agora=new Date();agora.setHours(0,0,0,0);
+      av.innerHTML=m.historico.length===0
+        ? '<div style="color:#8696B0;padding:14px 0">Sem atividades ainda</div>'
+        : m.historico.slice(0,4).map(function(h){
+            var d=new Date(h.created_at||h.data);d.setHours(0,0,0,0);
+            var diff=Math.round((agora-d)/86400000);
+            var badge=diff<=0?'Hoje':diff===1?'Ontem':'Há '+diff+' dias';
+            var cls=h.tipo==='cancelamento'?'tag-red':'tag-green';
+            var cli=m.clientes.find(function(c){return c.id===h.cliente_id;});
+            return '<div class="alert-row"><div><div class="contact-name">'+(cli?cli.nome:'—')+'</div><div class="contact-sub">'+h.descricao+'</div></div><span class="tag-pill '+cls+'">'+badge+'</span></div>';
+          }).join('');
+    }
+    // Datas importantes
+    function icones(tel,email){
+      var out='';
+      if(email)out+='<a class="bday-icon" href="mailto:'+email+'" title="E-mail"><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></a>';
+      if(tel){var dg=tel.replace(/\D/g,'');
+        out+='<a class="bday-icon" href="tel:+55'+dg+'" title="Ligar"><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2z"/></svg></a>';
+        out+='<a class="bday-icon" href="https://wa.me/55'+dg+'" target="_blank" title="WhatsApp"><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 21l2-5.4A8.5 8.5 0 1 1 21 11.5z"/></svg></a>';}
+      return out?'<div class="bday-icons">'+out+'</div>':'';
+    }
+    var ta=document.getElementById('tab-aniv');
+    if(ta){
+      ta.innerHTML=m.aniv.length===0
+        ? '<div style="color:#8696B0;padding:14px 0">Nenhum aniversariante nos próximos 30 dias</div>'
+        : m.aniv.map(function(a){
+            return '<div class="bday-row"><div><div class="bday-name">'+a.nome+'</div><div class="bday-date">'+a.data.getDate()+' de '+MESES_PT[a.data.getMonth()]+' ('+relDia(a.data)+')</div></div><div class="bday-right"><span class="bday-age">Faz '+a.idade+' anos</span>'+icones(a.tel,a.email)+'</div></div>';
+          }).join('');
+    }
+    var tp=document.getElementById('tab-apolice');
+    if(tp){
+      tp.innerHTML=m.anivAp.length===0
+        ? '<div style="color:#8696B0;padding:14px 0">Nenhum aniversário de apólice nos próximos 30 dias</div>'
+        : m.anivAp.map(function(a){
+            return '<div class="bday-row"><div><div class="bday-name">'+a.nome+'</div><div class="bday-date">'+a.ramo+' — '+a.data.getDate()+' de '+MESES_PT[a.data.getMonth()]+' ('+relDia(a.data)+')</div></div><div class="bday-right"><span class="bday-age">'+a.anos+' ano'+(a.anos>1?'s':'')+'</span></div></div>';
+          }).join('');
+    }
+    // Donut Carteira
+    var svg=document.getElementById('donutSvg');
+    var leg=document.getElementById('donutLegend');
+    var ctr=document.getElementById('donutCenter');
+    if(ctr)ctr.textContent=fmtBRL0(m.comissaoMensal);
+    if(svg&&leg){
+      var C=2*Math.PI*46;
+      var ramosArr=Object.keys(m.porRamo).map(function(k){return m.porRamo[k];}).sort(function(a,b){return b.comissao-a.comissao;});
+      var total=m.comissaoMensal||1;
+      var circles='<circle cx="60" cy="60" r="46" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="14"/>';
+      var off=0;
+      ramosArr.forEach(function(r){
+        if(r.comissao<=0)return;
+        var frac=r.comissao/total,len=frac*C;
+        circles+='<circle cx="60" cy="60" r="46" fill="none" stroke="'+r.cor+'" stroke-width="14" stroke-dasharray="'+len.toFixed(1)+' '+(C-len).toFixed(1)+'" stroke-dashoffset="'+(-off).toFixed(1)+'"/>';
+        off+=len;
+      });
+      svg.innerHTML=circles;
+      leg.innerHTML=ramosArr.length===0
+        ? '<div style="color:#8696B0">Sem comissões ativas</div>'
+        : ramosArr.map(function(r){
+            return '<div class="legend-row"><div class="legend-dot" style="background:'+r.cor+'"></div>'+r.nome+' · '+fmtBRL0(r.comissao)+'</div>';
+          }).join('');
+    }
+    hbRenderCarteira(m);
+    hbRenderClientes(m.clientes,m.contratos);
   });
 }
 function hbRenderClientes(lista, contratosAll){
@@ -6470,10 +6628,20 @@ function hbRenderClientes(lista, contratosAll){
     if(!minVig[ct.cliente_id]||ct.vigencia_inicio<minVig[ct.cliente_id])minVig[ct.cliente_id]=ct.vigencia_inicio;
   });
   function brData(d){var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+  // Tags de produto por cliente (ramos dos contratos ativos)
+  var slugFix={consorcio:'cons',residencial:'rc'};
+  var tagMap={};
+  (contratosAll||[]).forEach(function(ct){
+    if(ct.status!=='ativo'||!ct.ramos)return;
+    var tg=slugFix[ct.ramos.slug]||ct.ramos.slug;
+    if(!tagMap[ct.cliente_id])tagMap[ct.cliente_id]=[];
+    if(tagMap[ct.cliente_id].indexOf(tg)===-1)tagMap[ct.cliente_id].push(tg);
+  });
   clients=lista.filter(function(c){return c.status!=='cancelado';}).map(function(c){
     var desde=minVig[c.id]||c.cliente_desde;
-    return {id:c.id,n:c.nome,t:[],s:desde?brData(desde):'—',st:c.status==='ativo'?'ok':c.status==='renovar'?'ren':'cancel',_raw:c};
+    return {id:c.id,n:c.nome,t:tagMap[c.id]||[],s:desde?brData(desde):'—',st:c.status==='ativo'?'ok':c.status==='renovar'?'ren':'cancel',_raw:c};
   });
+  _allClients=clients.slice();
   clientsCancelled=lista.filter(function(c){return c.status==='cancelado';}).map(function(c){
     return {id:c.id,n:c.nome,t:[],s:'—',st:'cancel',_raw:c};
   });
@@ -6490,6 +6658,11 @@ function hbRenderClientes(lista, contratosAll){
   if(badgeCancelados) badgeCancelados.textContent=clientsCancelled.length;
   var g=document.getElementById('clGrid');if(g){g.innerHTML='';renderClientCards();}
   renderClients();
+  var info=document.getElementById('clPagInfo');
+  if(info)info.textContent='Exibindo '+clients.length+' de '+clients.length;
+  var pb=document.getElementById('clPagBtns');
+  if(pb)pb.style.display=clients.length>15?'flex':'none';
+  hbRenderCrossSell();
 }
 async function hbSalvarClienteBanco(){
   var nome=((document.getElementById('ncNome')||{}).value||'').trim();
@@ -6525,6 +6698,145 @@ async function hbSalvarContratoBanco(){
   await dbRegistrarHistorico(cm.id,'Contrato adicionado — '+seg,'contrato');
   showToast('Contrato '+seg+' salvo!');hbRenderClientes(null);return true;
 }
+// ── CARTEIRA: cards por ramo com dados reais ───────────────
+var SHIELD_SVG='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="COLOR" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V6l-8-3-8 3v6c0 6 8 10 8 10z"/></svg>';
+function hbRenderCarteira(m){
+  var grid=document.getElementById('cwRamoGrid');
+  if(!grid||!m)return;
+  var addBtn=grid.querySelector('.cw-add-card');
+  var tpl=grid.querySelector('.cw-card[data-ramo]');
+  var totalContratos=m.contratosAtivos||0;
+  var byRamoId={};Object.keys(m.porRamo).forEach(function(k){byRamoId[k]=m.porRamo[k];});
+  var frag=document.createDocumentFragment();
+  (m.ramos||[]).forEach(function(r){
+    var st=null;
+    Object.keys(m.porRamo).forEach(function(k){if(m.porRamo[k].slug===r.slug)st=m.porRamo[k];});
+    st=st||{comissao:0,receita:0,contratos:0,cli:{},venc:0};
+    var card;
+    var existing=grid.querySelector('.cw-card[data-ramo="'+r.slug+'"]');
+    if(existing){card=existing.cloneNode(true);}
+    else if(tpl){card=tpl.cloneNode(true);card.setAttribute('data-ramo',r.slug);
+      var ic=card.querySelector('.cw-card-icon');
+      if(ic){ic.style.background=r.cor+'22';ic.innerHTML=SHIELD_SVG.replace('COLOR',r.cor);}
+      var nm=card.querySelector('.cw-card-ramo');if(nm)nm.textContent=r.nome;
+    } else return;
+    card.onclick=function(){openRamoPage(r.slug);};
+    var arr=card.querySelector('.cw-card-arrow');
+    if(arr)arr.onclick=function(e){e.stopPropagation();openRamoPage(r.slug);};
+    var cnt=card.querySelector('.cw-card-count');if(cnt)cnt.textContent=st.contratos;
+    var pct=totalContratos>0?Math.round(st.contratos/totalContratos*100):0;
+    var pill=card.querySelector('.cw-card-meta .tag-pill');
+    if(pill){pill.textContent=pct+'%';pill.style.background=r.cor+'29';pill.style.color=r.cor;pill.style.borderColor=r.cor+'73';}
+    var bar=card.querySelector('.cw-bar-fill');if(bar){bar.style.width=pct+'%';bar.style.background=r.cor;}
+    var vals=card.querySelectorAll('.cw-receita-value');
+    if(vals[0])vals[0].textContent=fmtBRL0(st.receita);
+    if(vals[1])vals[1].textContent=fmtBRL0(st.comissao);
+    frag.appendChild(card);
+  });
+  grid.innerHTML='';
+  grid.appendChild(frag);
+  if(addBtn)grid.appendChild(addBtn);
+}
+
+// ── PÁGINA DO RAMO com dados reais ─────────────────────────
+(function(){
+  var _origOpenRamo=openRamoPage;
+  openRamoPage=function(key){
+    if(_M){
+      var ramoDB=(_M.ramos||[]).find(function(r){return r.slug===key;});
+      if(ramoDB){
+        var cts=_M.contratos.filter(function(c){return c.ramos&&c.ramos.slug===key;});
+        var ativosR=cts.filter(function(c){return c.status==='ativo';});
+        var receita=0,comissao=0,cliSet={};
+        var hoje=new Date();hoje.setHours(0,0,0,0);
+        var em60=new Date(hoje);em60.setDate(em60.getDate()+60);
+        var venc=0;
+        ativosR.forEach(function(c){
+          receita+=parseFloat(c.valor_premio)||0;comissao+=parseFloat(c.valor_comissao)||0;cliSet[c.cliente_id]=1;
+          if(c.vigencia_fim){var p=c.vigencia_fim.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]);if(d>=hoje&&d<=em60)venc++;}
+        });
+        var base=ramoData[key]||{iconKey:'shield',cardIcon:SHIELD_SVG.replace('COLOR',ramoDB.cor)};
+        base.nome=ramoDB.nome;base.color=ramoDB.cor;base.bg=ramoDB.cor+'29';
+        base.contratos=ativosR.length;
+        base.clientes=Object.keys(cliSet).length;
+        base.receita=fmtBRL0(receita);
+        base.comissao=fmtBRL0(comissao);
+        base.ticket=ativosR.length>0?fmtBRL(receita/ativosR.length):'—';
+        base['var']='—';base.venc=venc;
+        base.alertas=[];
+        base.table=cts.map(function(c){
+          var cli=_M.clientes.find(function(x){return x.id===c.cliente_id;});
+          var vf=c.vigencia_fim?(function(d){var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0].slice(2);})(c.vigencia_fim):'—';
+          var st=c.status==='ativo'?'Em dia':c.status==='renovar'?'Renovar':'Cancelado';
+          var cls=c.status==='ativo'?'tag-green':c.status==='renovar'?'tag-orange':'tag-red';
+          return{nome:cli?cli.nome:'—',seg:c.seguradora,val:fmtBRL(parseFloat(c.valor_premio)||0),venc:vf,st:st,stcls:cls};
+        });
+        ramoData[key]=base;
+      }
+    }
+    _origOpenRamo(key);
+  };
+})();
+
+// ── CROSS-SELL real (Qual cliente ainda não tem) ───────────
+function hbRenderCrossSell(){
+  if(!_M)return;
+  var tabs=document.getElementById('semRamoTabs');
+  var list=document.getElementById('semRamoList');
+  if(!tabs||!list)return;
+  tabs.innerHTML=(_M.ramos||[]).map(function(r,i){
+    var label=r.nome.replace('Seguro de ','Seg. ').replace('Plano de ','');
+    return '<button class="cltab'+(i===0?' on':'')+'" onclick="switchSemRamo(this,\''+r.slug+'\')">'+label+'</button>';
+  }).join('');
+  var first=(_M.ramos||[])[0];
+  if(first)hbFillSemRamo(first.slug);
+}
+function switchSemRamo(btn,slug){
+  document.querySelectorAll('#semRamoTabs .cltab').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  hbFillSemRamo(slug);
+}
+function hbFillSemRamo(slug){
+  if(!_M)return;
+  var list=document.getElementById('semRamoList');if(!list)return;
+  var comRamo={};
+  _M.contratos.forEach(function(c){
+    if(c.status==='ativo'&&c.ramos&&c.ramos.slug===slug)comRamo[c.cliente_id]=1;
+  });
+  var sem=_M.clientes.filter(function(c){return c.status!=='cancelado'&&!comRamo[c.id];});
+  list.innerHTML=sem.length===0
+    ? '<div style="color:#8696B0;padding:14px 0">Todos os clientes ativos já têm este ramo 🎯</div>'
+    : sem.map(function(c){
+        var det=[];
+        if(c.data_nascimento){var p=c.data_nascimento.split('-');var hj=new Date();var idade=hj.getFullYear()-(+p[0])-((hj.getMonth()+1<+p[1]||(hj.getMonth()+1===+p[1]&&hj.getDate()<+p[2]))?1:0);det.push(idade+' anos');}
+        if(c.cidade)det.push(c.cidade+(c.estado?', '+c.estado:''));
+        var cta=c.telefone
+          ? '<a class="sem-ramo-cta" style="text-decoration:none" href="https://wa.me/55'+c.telefone.replace(/\D/g,'')+'" target="_blank">Oferecer</a>'
+          : '<button class="sem-ramo-cta" onclick="showToast(\'Cliente sem telefone cadastrado\')">Oferecer</button>';
+        return '<div class="sem-ramo-row"><div><div class="sem-ramo-name">'+c.nome+'</div>'+(det.length?'<div class="sem-ramo-detail">'+det.join(' — ')+'</div>':'')+'</div>'+cta+'</div>';
+      }).join('');
+}
+
+// ── BUSCA GLOBAL por nome/CPF ──────────────────────────────
+var _allClients=null;
+function hbGlobalSearch(v){
+  v=(v||'').trim().toLowerCase();
+  if(_currentPg!=='clientes'){navTo('clientes',document.getElementById('ni-clientes'));}
+  var apply=function(){
+    if(!_allClients)return;
+    clients=v===''?_allClients.slice():_allClients.filter(function(c){
+      var cpf=(c._raw&&c._raw.cpf||'').replace(/\D/g,'');
+      return c.n.toLowerCase().indexOf(v)!==-1||cpf.indexOf(v.replace(/\D/g,''))!==-1&&v.replace(/\D/g,'')!=='';
+    });
+    clCardPage=0;clCardAllLoaded=false;
+    var g=document.getElementById('clGrid');if(g){g.innerHTML='';renderClientCards();}
+    renderClients();
+    var info=document.getElementById('clPagInfo');
+    if(info)info.textContent='Exibindo '+clients.length+' de '+_allClients.length;
+  };
+  if(_allClients)apply();else setTimeout(apply,400);
+}
+
 // ── Mais ações do cliente ─────────────────────────────────
 function togglePfAcoes(e){
   e.stopPropagation();
