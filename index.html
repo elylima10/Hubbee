@@ -3522,6 +3522,22 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
           <svg width="17" height="17" viewBox="0 0 17 17" fill="none"><path d="M7 1.5C7 0.671573 7.67157 0 8.5 0C9.32843 0 10 0.671573 10 1.5V15.5C10 16.3284 9.32843 17 8.5 17C7.67157 17 7 16.3284 7 15.5V1.5Z" fill="#151A1D"/><path d="M1.5 10C0.671573 10 1.01779e-07 9.32843 6.55671e-08 8.5C2.93554e-08 7.67157 0.671573 7 1.5 7H6.5C7.32843 7 8 7.67157 8 8.5C8 9.32843 7.32843 10 6.5 10H1.5Z" fill="#151A1D"/><path d="M13.5 10C12.6716 10 12 9.32843 12 8.5C12 7.67157 12.6716 7 13.5 7H15.5C16.3284 7 17 7.67157 17 8.5C17 9.32843 16.3284 10 15.5 10H13.5Z" fill="#151A1D"/></svg>
           Novo contrato
         </button>
+        <div class="maisacoes-wrap" style="position:relative;margin-top:10px">
+          <button class="ct-back" id="pfAcoesBtn" onclick="togglePfAcoes(event)" style="width:100%;justify-content:center">
+            Mais ações
+            <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="#8696B0" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+          <div class="maisacoes-menu" id="pfAcoesMenu">
+            <button class="ma-item" onclick="closePfAcoes();hbInativarCliente()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/></svg>
+              Inativar cliente
+            </button>
+            <button class="ma-item" style="color:#FF6B6B" onclick="closePfAcoes();hbExcluirCliente()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Excluir cliente
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -4385,7 +4401,7 @@ function openContrato(key){
 function renderCtDocs(){
   var d=contratoData[currentContratoKey];if(!d)return;
   document.getElementById("ctDocList").innerHTML=d.documentos.map(function(doc){
-    return'<div class="nct-doc-row" onclick="showToast(\'Download iniciado\')">'
+    return'<div class="nct-doc-row" onclick="'+(doc.path?'hbBaixarDoc(\''+doc.path+'\')':'showToast(\'Download iniciado\')')+'">'
       +'<div class="nct-doc-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8696B0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17H16"/><path d="M8 13H12"/><path d="M13 2.5V3C13 5.82843 13 7.24264 13.8787 8.12132C14.7574 9 16.1716 9 19 9H19.5M20 10.6569V14C20 17.7712 20 19.6569 18.8284 20.8284C17.6569 22 15.7712 22 12 22C8.22876 22 6.34315 22 5.17157 20.8284C4 19.6569 4 17.7712 4 14V9.45584C4 6.21082 4 4.58831 4.88607 3.48933C5.06508 3.26731 5.26731 3.06508 5.48933 2.88607C6.58831 2 8.21082 2 11.4558 2C12.1614 2 12.5141 2 12.8372 2.11401C12.9044 2.13772 12.9702 2.165 13.0345 2.19575C13.3436 2.34355 13.593 2.593 14.0919 3.09188L18.8284 7.82843C19.4065 8.40649 19.6955 8.69552 19.8478 9.06306C20 9.4306 20 9.83935 20 10.6569Z"/></svg></div>'
       +'<div><div class="nct-doc-nome">'+doc.nome+'</div><div class="nct-doc-meta">'+doc.meta+'</div></div>'
       +'<button class="nct-doc-dl" title="Baixar"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F0F0F2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.99969 17.0002C2.99969 17.9302 2.99969 18.3952 3.10192 18.7767C3.37932 19.8119 4.18796 20.6206 5.22324 20.898C5.60474 21.0002 6.06972 21.0002 6.99969 21.0002L16.9997 21.0002C17.9297 21.0002 18.3947 21.0002 18.7762 20.898C19.8114 20.6206 20.6201 19.8119 20.8975 18.7767C20.9997 18.3952 20.9997 17.9302 20.9997 17.0002"/><path d="M16.4998 11.5002C16.4998 11.5002 13.1856 16.0002 11.9997 16.0002C10.8139 16.0002 7.49976 11.5002 7.49976 11.5002M11.9997 15.0002V3.00016"/></svg></button>'
@@ -4623,9 +4639,33 @@ function saveEditContrato(){
     var cfg=pdataFields[currentEditSection];
     if(cfg)cfg.ids.forEach(function(f){
       var inp=document.getElementById('pedit_'+f[0]);if(!inp)return;
-      var span=document.getElementById('pv-'+f[0]);if(span)span.textContent=inp.value;
-      var pi=document.getElementById('pi-'+f[0]);if(pi)pi.value=inp.value;
+      var shown=inp.value;
+      if(f[0]==='renda'&&shown)shown='R$ '+shown;
+      var span=document.getElementById('pv-'+f[0]);if(span)span.textContent=shown||'—';
+      var pi=document.getElementById('pi-'+f[0]);if(pi)pi.value=shown;
     });
+    // Reflete no header do perfil
+    if(currentEditSection==='pdata-info'){
+      var hn=document.getElementById('pedit_nome');
+      if(hn&&hn.value.trim()){
+        document.getElementById('perfilNome').textContent=hn.value.trim();
+        var bc=document.getElementById('bcrumbCliente');if(bc)bc.textContent=hn.value.trim();
+      }
+      var he=document.getElementById('pedit_email');
+      if(he){
+        var em=he.value.trim();
+        document.getElementById('perfilEmail').textContent=em||'Sem e-mail';
+        var el=document.getElementById('perfilEmailLink');if(el)el.href=em?'mailto:'+em:'#';
+      }
+      var ht=document.getElementById('pedit_tel');
+      if(ht){
+        var tl=ht.value.trim();
+        document.getElementById('perfilTel').textContent=tl||'Sem telefone';
+        var dg=tl.replace(/\D/g,'');
+        var tlk=document.getElementById('perfilTelLink');if(tlk)tlk.href=tl?'tel:+55'+dg:'#';
+        var wlk=document.getElementById('perfilWhatsLink');if(wlk)wlk.href=tl?'https://wa.me/55'+dg:'#';
+      }
+    }
     // Persiste no banco
     if(_perfilClienteId){
       function gv(id){var e=document.getElementById('pedit_'+id);return e?e.value.trim():null;}
@@ -4774,6 +4814,10 @@ function checkDelConfirm(inp){
 function cancelarContrato(){
   contratoStatus[currentContratoKey]='cancelado';
   updateContratoStatusUI('cancelado');
+  var _d=contratoData[currentContratoKey];
+  if(_d&&_d._dbId){
+    _supa.from('contratos').update({status:'cancelado',cancelado_em:new Date().toISOString().slice(0,10)}).eq('id',_d._dbId).then(function(){});
+  }
   var d=contratoData[currentContratoKey];
   if(d)addHistorico('Contrato cancelado — '+d.seg+' ('+d.ramo+')',false);
   closeDeleteContrato();
@@ -4783,6 +4827,10 @@ function cancelarContrato(){
 function reativarContrato(){
   contratoStatus[currentContratoKey]='ativo';
   updateContratoStatusUI('ativo');
+  var _d=contratoData[currentContratoKey];
+  if(_d&&_d._dbId){
+    _supa.from('contratos').update({status:'ativo',cancelado_em:null}).eq('id',_d._dbId).then(function(){});
+  }
   var d=contratoData[currentContratoKey];
   if(d)addHistorico('Contrato reativado — '+d.seg+' ('+d.ramo+')',true);
   showToast('Contrato reativado');
@@ -5200,6 +5248,8 @@ async function hbAbrirPerfil(c) {
   var elTelLink = document.getElementById('perfilTelLink');
   if (elTel) elTel.textContent = tel || 'Sem telefone';
   if (elTelLink) elTelLink.href = tel ? 'tel:+55' + tel.replace(/\D/g,'') : '#';
+  var elWpp = document.getElementById('perfilWhatsLink');
+  if (elWpp) elWpp.href = tel ? 'https://wa.me/55' + tel.replace(/\D/g,'') : '#';
 
   // Breadcrumb
   var bc = document.getElementById('bcrumbCliente');
@@ -5210,7 +5260,7 @@ async function hbAbrirPerfil(c) {
   var nascBR = nasc ? (function(d){var p=String(d).split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d;})(nasc) : '';
   var dpFields = {
     'pv-nome': nome, 'pv-cpf': cpf, 'pv-nasc': nascBR,
-    'pv-sexo': raw.sexo || '', 'pv-renda': raw.renda || '',
+    'pv-sexo': raw.sexo || '', 'pv-renda': raw.renda ? 'R$ '+raw.renda : '',
     'pv-ecivil': ecivil, 'pv-prof': prof, 'pv-email': email,
     'pv-tel': tel,
     'pv-cidade': (cidade && estado) ? cidade+'/'+estado : (cidade||estado||'')
@@ -5269,6 +5319,13 @@ async function hbAbrirContratoDB(ctId){
     coberturas:cobs.map(function(c){return{nome:c.nome,desc:c.descricao||'',val:c.valor||''};}),
     documentos:[]
   };
+  var rdocs=await _supa.from('documentos').select('*').eq('contrato_id',ct.id);
+  if(rdocs.data){
+    contratoData['db'].documentos=rdocs.data.map(function(doc){
+      var dt=doc.data_upload?(function(d){var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];})(doc.data_upload):'';
+      return{nome:doc.nome_arquivo,meta:(doc.tamanho_mb?doc.tamanho_mb+' MB':'')+(dt?' · '+dt:''),path:doc.storage_path};
+    });
+  }
   contratoStatus['db']=ct.status||'ativo';
   openContrato('db');
 }
@@ -5296,13 +5353,16 @@ async function hbCarregarContratosNoPerfil(clienteId) {
     var vigFim = ct.vigencia_fim ? (function(d){var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0].slice(2);})(ct.vigencia_fim) : '—';
     var valor = ct.valor_premio ? 'R$'+parseFloat(ct.valor_premio).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—';
     return '<div class="ncc" style="cursor:pointer" onclick="hbAbrirContratoDB(\''+ct.id+'\')">'
-      + '<div class="ncc-top"><span style="display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:-0.02em;background:'+ramoColor+'22;color:'+ramoColor+'">'+ramo+'</span></div>'
-      + '<div class="ncc-seg">'+ct.seguradora+(ct.numero_apolice?' <span style="color:#8696B0;font-size:12px">'+ct.numero_apolice+'</span>':'')+'</div>'
+      + '<div class="ncc-top" style="display:flex;justify-content:space-between;align-items:flex-start"><span style="display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:-0.02em;background:'+ramoColor+'22;color:'+ramoColor+'">'+ramo+'</span><span style="opacity:.85"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.43936 0.00131747C9.55469 -0.00682357 10.7446 0.0211267 11.747 0.1312C12.2461 0.186016 12.7347 0.265024 13.1601 0.383153C13.493 0.47563 13.9326 0.629543 14.2938 0.923193L14.4433 1.05698L14.5771 1.2064C14.8707 1.56761 15.0246 2.00722 15.1171 2.34018C15.2352 2.76551 15.3142 3.25417 15.369 3.75327C15.4791 4.75567 15.5071 5.94556 15.4989 7.06089C15.4907 8.18325 15.445 9.26445 15.4022 10.0628C15.3808 10.4628 15.3603 10.7943 15.3446 11.0257C15.3368 11.1411 15.3306 11.2318 15.3261 11.2943C15.3238 11.3255 15.3215 11.35 15.3202 11.3666C15.3196 11.3748 15.3196 11.3816 15.3192 11.3861C15.3191 11.3882 15.3184 11.3898 15.3183 11.391V11.3929C15.2644 12.0812 14.6628 12.5962 13.9745 12.5423C13.2864 12.4884 12.7724 11.8867 12.8261 11.1986V11.1937C12.8263 11.1903 12.8275 11.1851 12.828 11.1781C12.8291 11.1636 12.8308 11.1415 12.8329 11.1126C12.8372 11.0545 12.843 10.9675 12.8505 10.8568C12.8654 10.6353 12.8855 10.3166 12.9062 9.93003C12.9476 9.15496 12.9911 8.11398 12.9989 7.04233C13.0058 6.09697 12.9798 5.15342 12.911 4.35581L2.13369 15.1341C1.64554 15.6223 0.854271 15.6223 0.366116 15.1341C-0.122038 14.646 -0.122039 13.8547 0.366116 13.3666L11.1435 2.58823C10.3461 2.51951 9.40286 2.49442 8.45791 2.50132C7.38626 2.50914 6.34529 2.55263 5.57022 2.59409C5.18369 2.61477 4.86492 2.63481 4.64346 2.64976C4.53273 2.65723 4.44574 2.66308 4.3876 2.66733C4.35875 2.66944 4.33661 2.67112 4.32217 2.67222C4.31514 2.67275 4.30995 2.67391 4.30655 2.67417H4.30166C3.6136 2.72784 3.01186 2.21378 2.95791 1.52573C2.90408 0.837478 3.41907 0.235818 4.10733 0.181982H4.10928C4.11047 0.181889 4.11207 0.181166 4.11416 0.181005C4.11861 0.180662 4.1254 0.180657 4.13369 0.180028C4.15028 0.178772 4.17475 0.176453 4.20596 0.174169C4.26842 0.169598 4.35919 0.163398 4.47451 0.155614C4.70593 0.139997 5.03743 0.119395 5.43741 0.0979972C6.23579 0.0552906 7.31699 0.00951506 8.43936 0.00131747Z" fill="#8696B0"/></svg></span></div>'
+      + '<div class="ncc-seg">'+ct.seguradora+'</div>'
+      + (ct.numero_apolice?'<div style="color:#8696B0;font-size:12px;letter-spacing:-0.02em;margin-top:2px">'+ct.numero_apolice+'</div>':'')
       + '<div class="ncc-statusrow"><span class="ncc-statuslbl">Status</span><span class="ncc-statusval" id="'+stId+'"></span></div>'
       + '<div class="ncc-cols">'
       + '<div><div class="ncc-col-lbl">Valor mensal</div><div class="ncc-col-val">'+valor+'</div></div>'
       + '<div><div class="ncc-col-lbl">Início Vigência</div><div class="ncc-col-val">'+vigIni+'</div></div>'
-      + '<div><div class="ncc-col-lbl">Fim Vigência</div><div class="ncc-col-val">'+vigFim+'</div></div>'
+      + (ct.status==='cancelado'
+        ? '<div><div class="ncc-col-lbl">Cancelado em</div><div class="ncc-col-val">'+(ct.cancelado_em?(function(d){var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0].slice(2);})(ct.cancelado_em):'—')+'</div></div>'
+        : '<div><div class="ncc-col-lbl">Fim Vigência</div><div class="ncc-col-val">'+vigFim+'</div></div>')
       + '</div></div>';
   }).join('');
   // Aplica status visual
@@ -5621,6 +5681,18 @@ async function hbSalvarContratosPDF(){
     var novo=await dbSalvarContrato(campos,bens,cobs);
     if(novo){
       await dbRegistrarHistorico(cm.id,'Contrato importado via PDF — '+seg,'contrato');
+      // Anexa o PDF original nos documentos do contrato
+      try{
+        var file=wcFiles[i];
+        if(file){
+          var safe=file.name.replace(/[^A-Za-z0-9._-]/g,'_');
+          var path=HB.user.id+'/'+novo.id+'/'+Date.now()+'_'+safe;
+          var up=await _supa.storage.from('documentos').upload(path,file,{contentType:'application/pdf'});
+          if(!up.error){
+            await _supa.from('documentos').insert({contrato_id:novo.id,corretor_id:HB.user.id,nome_arquivo:file.name,tamanho_mb:+(file.size/1048576).toFixed(2),storage_path:path});
+          } else { console.error('Storage upload:',up.error); }
+        }
+      }catch(e){console.error('Upload doc:',e);}
       salvos++;
     }
   }
@@ -6068,6 +6140,11 @@ function handleWizXls(inp){
 }
 
 // ── DADOS PESSOAIS — EDITAR (modal igual à página do contrato) ──
+function hbMoneyMask(el){
+  var d=el.value.replace(/\D/g,'');
+  if(!d){el.value='';return;}
+  el.value=(parseInt(d,10)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
 var pdataFields={
   'pdata-info':{title:'Informações Pessoais',ids:[['nome','Nome completo'],['cpf','CPF'],['nasc','Data de nascimento'],['prof','Profissão'],['ecivil','Estado civil'],['sexo','Sexo'],['renda','Renda mensal'],['email','E-mail'],['tel','Telefone']]},
   'pdata-end':{title:'Endereço',ids:[['cep','CEP'],['num','Número'],['rua','Rua'],['comp','Complemento'],['bairro','Bairro'],['cidade','Cidade'],['estado','Estado']]}
@@ -6082,7 +6159,18 @@ function openPdataModal(section){
   body.classList.add('two-col');
   body.innerHTML=cfg.ids.map(function(f){
     var cur=document.getElementById('pv-'+f[0]);
-    return'<div class="ar-field"><label>'+f[1]+'</label><input type="text" id="pedit_'+f[0]+'" value="'+(cur?cur.textContent:'')+'"></div>';
+    var v=(cur?cur.textContent:'').trim();if(v==='—')v='';
+    if(f[0]==='sexo'){
+      var opts=['','Masculino','Feminino','Não Informar'].map(function(o){
+        return '<option value="'+o+'"'+(o===v?' selected':'')+'>'+(o||'Selecione')+'</option>';
+      }).join('');
+      return'<div class="ar-field"><label>'+f[1]+'</label><select id="pedit_'+f[0]+'">'+opts+'</select></div>';
+    }
+    if(f[0]==='renda'){
+      var num=v.replace(/^R\$\s*/,'');
+      return'<div class="ar-field"><label>'+f[1]+'</label><div style="display:flex;align-items:center;gap:0;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;padding:0 0 0 12px"><span style="color:#8696B0;font-weight:600">R$</span><input type="text" id="pedit_'+f[0]+'" value="'+num+'" oninput="hbMoneyMask(this)" placeholder="0,00" style="background:none;border:none;flex:1;padding:11px 12px 11px 8px;color:#F0F0F2;font-family:inherit;font-size:14px;letter-spacing:-0.04em;outline:none"></div></div>';
+    }
+    return'<div class="ar-field"><label>'+f[1]+'</label><input type="text" id="pedit_'+f[0]+'" value="'+v+'"></div>';
   }).join('');
   document.getElementById("ctEditModalOverlay").classList.add("open");
 }
@@ -6360,13 +6448,24 @@ function hbRenderDashboard(){
     if(cards[1]) cards[1].querySelector('.metric-value').textContent=m.contratosAtivos;
     if(cards[2]) cards[2].querySelector('.metric-value').textContent='R$ '+m.comissaoMensal.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
     if(cards[3]) cards[3].querySelector('.metric-value').textContent=m.renovacoesProximas;
-    hbRenderClientes(m.clientes);
+    hbRenderClientes(m.clientes, m.contratos);
   });
 }
-function hbRenderClientes(lista){
-  if(!lista){dbListarClientes().then(hbRenderClientes);return;}
+function hbRenderClientes(lista, contratosAll){
+  if(!lista){
+    Promise.all([dbListarClientes(),dbListarContratos()]).then(function(r){hbRenderClientes(r[0],r[1]);});
+    return;
+  }
+  // "Cliente desde" = início de vigência mais antigo entre os contratos do cliente
+  var minVig={};
+  (contratosAll||[]).forEach(function(ct){
+    if(!ct.vigencia_inicio)return;
+    if(!minVig[ct.cliente_id]||ct.vigencia_inicio<minVig[ct.cliente_id])minVig[ct.cliente_id]=ct.vigencia_inicio;
+  });
+  function brData(d){var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
   clients=lista.filter(function(c){return c.status!=='cancelado';}).map(function(c){
-    return {id:c.id,n:c.nome,t:[],s:c.cliente_desde?(function(d){var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];})(c.cliente_desde):'—',st:c.status==='ativo'?'ok':c.status==='renovar'?'ren':'cancel',_raw:c};
+    var desde=minVig[c.id]||c.cliente_desde;
+    return {id:c.id,n:c.nome,t:[],s:desde?brData(desde):'—',st:c.status==='ativo'?'ok':c.status==='renovar'?'ren':'cancel',_raw:c};
   });
   clientsCancelled=lista.filter(function(c){return c.status==='cancelado';}).map(function(c){
     return {id:c.id,n:c.nome,t:[],s:'—',st:'cancel',_raw:c};
@@ -6419,6 +6518,45 @@ async function hbSalvarContratoBanco(){
   await dbRegistrarHistorico(cm.id,'Contrato adicionado — '+seg,'contrato');
   showToast('Contrato '+seg+' salvo!');hbRenderClientes(null);return true;
 }
+// ── Mais ações do cliente ─────────────────────────────────
+function togglePfAcoes(e){
+  e.stopPropagation();
+  var m=document.getElementById('pfAcoesMenu');
+  m.classList.toggle('open');
+}
+function closePfAcoes(){var m=document.getElementById('pfAcoesMenu');if(m)m.classList.remove('open');}
+document.addEventListener('click',function(){closePfAcoes();});
+
+async function hbInativarCliente(){
+  if(!_perfilClienteId)return;
+  if(!confirm('Inativar este cliente?\n\nEle irá para Cancelados e todos os contratos dele serão cancelados automaticamente.'))return;
+  var hoje=new Date().toISOString().slice(0,10);
+  await dbAtualizarCliente(_perfilClienteId,{status:'cancelado'});
+  await _supa.from('contratos').update({status:'cancelado',cancelado_em:hoje}).eq('cliente_id',_perfilClienteId).neq('status','cancelado');
+  await dbRegistrarHistorico(_perfilClienteId,'Cliente inativado — contratos cancelados','cancelamento');
+  showToast('Cliente inativado.');
+  hbRenderClientes(null);
+  navTo('clientes',document.getElementById('ni-clientes'));
+}
+
+async function hbExcluirCliente(){
+  if(!_perfilClienteId)return;
+  if(!confirm('EXCLUIR PERMANENTEMENTE este cliente?\n\nTodos os contratos, beneficiários, coberturas, documentos e histórico serão apagados. Essa ação não pode ser desfeita.'))return;
+  var r=await _supa.from('clientes').delete().eq('id',_perfilClienteId);
+  if(r.error){showToast('Erro ao excluir cliente.');return;}
+  showToast('Cliente excluído permanentemente.');
+  _perfilClienteId=null;
+  hbRenderClientes(null);
+  navTo('clientes',document.getElementById('ni-clientes'));
+}
+
+// ── Documentos: baixar via URL assinada ────────────────────
+async function hbBaixarDoc(path){
+  var r=await _supa.storage.from('documentos').createSignedUrl(path,60);
+  if(r.error||!r.data){showToast('Erro ao gerar link do documento.');return;}
+  window.open(r.data.signedUrl,'_blank');
+}
+
 // Verificar sessão ao carregar
 (function hbCheckSession(){
   _supa.auth.getSession().then(function(res){
