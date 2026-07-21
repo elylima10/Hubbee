@@ -4560,13 +4560,10 @@ function openEditContratoModal(section){
     +'<svg width="14" height="14" viewBox="0 0 17 17" fill="none"><path d="M7 1.5C7 0.671573 7.67157 0 8.5 0C9.32843 0 10 0.671573 10 1.5V15.5C10 16.3284 9.32843 17 8.5 17C7.67157 17 7 16.3284 7 15.5V1.5Z" fill="currentColor"/><path d="M1.5 10C0.671573 10 1.01779e-07 9.32843 6.55671e-08 8.5C2.93554e-08 7.67157 0.671573 7 1.5 7H6.5C7.32843 7 8 7.67157 8 8.5C8 9.32843 7.32843 10 6.5 10H1.5Z" fill="currentColor"/><path d="M13.5 10C12.6716 10 12 9.32843 12 8.5C12 7.67157 12.6716 7 13.5 7H15.5C16.3284 7 17 7.67157 17 8.5C17 9.32843 16.3284 10 15.5 10H13.5Z" fill="currentColor"/></svg>'
     +'Adicionar cobertura</button>';
   } else if(section==='bene'){
-    body.innerHTML=d.beneficiarios.map(function(b,i){
-      return '<div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1.4fr .6fr;gap:12px">'
-        +'<div class="ar-field"><label>Parentesco</label><input type="text" id="bedit_rel_'+i+'" value="'+b.rel+'"></div>'
-        +'<div class="ar-field"><label>Nome do beneficiário</label><input type="text" id="bedit_nome_'+i+'" value="'+b.nome+'"></div>'
-        +'<div class="ar-field"><label>%</label><input type="text" id="bedit_pct_'+i+'" value="'+b.pct+'"></div>'
-        +'</div>';
-    }).join('');
+    body.innerHTML='<div id="beneEditList" style="grid-column:1/-1;display:flex;flex-direction:column;gap:12px">'
+      +d.beneficiarios.map(function(b){return beneRowHTML(b.rel,b.nome,b.pct);}).join('')
+      +'</div>'
+      +'<button onclick="addBeneRow()" style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border:1.5px dashed rgba(255,255,255,0.18);border-radius:10px;background:none;color:#8696B0;cursor:pointer;font-size:13px;font-weight:600;letter-spacing:-0.04em">+ Adicionar beneficiário</button>';
   } else {
     var topFields='<div class="ar-field"><label>Valor mensal</label><input type="text" id="ceditPremio" value="'+d.premio+'"></div>'
       +'<div class="ar-field"><label>Início da vigência</label><input type="text" id="ceditVigIni" value="'+d.vigIni+'"></div>'
@@ -4604,6 +4601,21 @@ function removeCobRow(i){
   var row=document.getElementById("cobrow_"+i);
   if(row)row.remove();
 }
+function beneRowHTML(rel,nome,pct){
+  return '<div class="bene-edit-row" style="display:grid;grid-template-columns:1fr 1.4fr .6fr auto;gap:12px;align-items:end">'
+    +'<div class="ar-field"><label>Parentesco</label><input type="text" class="bedit-rel" value="'+(rel||'')+'"></div>'
+    +'<div class="ar-field"><label>Nome do beneficiário</label><input type="text" class="bedit-nome" value="'+(nome||'')+'"></div>'
+    +'<div class="ar-field"><label>%</label><input type="text" class="bedit-pct" value="'+(pct||'')+'"></div>'
+    +'<button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:#FF6B6B;padding:10px 4px" title="Remover"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+    +'</div>';
+}
+function addBeneRow(){
+  var list=document.getElementById('beneEditList');
+  if(!list)return;
+  var tmp=document.createElement('div');
+  tmp.innerHTML=beneRowHTML('','','');
+  list.appendChild(tmp.firstChild);
+}
 function closeEditContratoModal(){document.getElementById("ctEditModalOverlay").classList.remove("open");}
 function saveEditContrato(){
   // Dados pessoais / Endereço (página do cliente)
@@ -4614,6 +4626,19 @@ function saveEditContrato(){
       var span=document.getElementById('pv-'+f[0]);if(span)span.textContent=inp.value;
       var pi=document.getElementById('pi-'+f[0]);if(pi)pi.value=inp.value;
     });
+    // Persiste no banco
+    if(_perfilClienteId){
+      function gv(id){var e=document.getElementById('pedit_'+id);return e?e.value.trim():null;}
+      function toISObr(s){if(!s)return null;var p=s.split('/');return p.length===3?p[2]+'-'+p[1]+'-'+p[0]:null;}
+      var upd={};
+      if(currentEditSection==='pdata-info'){
+        upd={nome:gv('nome'),cpf:gv('cpf'),data_nascimento:toISObr(gv('nasc')),profissao:gv('prof'),estado_civil:gv('ecivil'),sexo:gv('sexo'),renda:gv('renda'),email:gv('email'),telefone:gv('tel')};
+      } else {
+        upd={cep:gv('cep'),numero:gv('num'),rua:gv('rua'),complemento:gv('comp'),bairro:gv('bairro'),cidade:gv('cidade'),estado:gv('estado')};
+      }
+      Object.keys(upd).forEach(function(k){if(upd[k]===null||upd[k]===undefined)delete upd[k];});
+      dbAtualizarCliente(_perfilClienteId,upd);
+    }
     closeEditContratoModal();
     showToast('Alterações salvas');
     return;
@@ -4630,12 +4655,27 @@ function saveEditContrato(){
       if(nome&&nome.value.trim())newCobs.push({nome:nome.value.trim(),desc:desc?desc.value.trim():'',val:val?val.value.trim():''});
     }
     if(newCobs.length>0)d.coberturas=newCobs;
+    if(d._dbId&&HB.user){
+      (async function(){
+        await _supa.from('coberturas').delete().eq('contrato_id',d._dbId);
+        if(newCobs.length)await _supa.from('coberturas').insert(newCobs.map(function(c){return{contrato_id:d._dbId,corretor_id:HB.user.id,nome:c.nome,descricao:c.desc,valor:c.val};}));
+      })();
+    }
   } else if(currentEditSection==='bene'){
-    d.beneficiarios.forEach(function(b,i){
-      var rel=document.getElementById("bedit_rel_"+i);if(rel)b.rel=rel.value;
-      var nm=document.getElementById("bedit_nome_"+i);if(nm)b.nome=nm.value;
-      var pct=document.getElementById("bedit_pct_"+i);if(pct)b.pct=pct.value;
+    var newBens=[];
+    document.querySelectorAll('#beneEditList .bene-edit-row').forEach(function(row){
+      var nm=row.querySelector('.bedit-nome');
+      if(nm&&nm.value.trim()){
+        newBens.push({rel:(row.querySelector('.bedit-rel')||{}).value||'',nome:nm.value.trim(),pct:(row.querySelector('.bedit-pct')||{}).value||''});
+      }
     });
+    d.beneficiarios=newBens;
+    if(d._dbId&&HB.user){
+      (async function(){
+        await _supa.from('beneficiarios').delete().eq('contrato_id',d._dbId);
+        if(newBens.length)await _supa.from('beneficiarios').insert(newBens.map(function(b){return{contrato_id:d._dbId,corretor_id:HB.user.id,relacao:b.rel,nome:b.nome,percentual:b.pct};}));
+      })();
+    }
   } else {
     var pIn=document.getElementById("ceditPremio");if(pIn&&pIn.value.trim()){var pv=pIn.value.trim();if(!/r\$/i.test(pv))pv='R$'+pv;d.premio=pv;}
     var viIn=document.getElementById("ceditVigIni");if(viIn&&viIn.value.trim())d.vigIni=viIn.value.trim();
@@ -5210,6 +5250,7 @@ async function hbAbrirContratoDB(ctId){
   var slugMap={'Seguro de Vida':'ccvida','Plano de Saúde':'ccsaude'};
   var premio=ct.valor_premio?'R$'+parseFloat(ct.valor_premio).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—';
   contratoData['db']={
+    _dbId:ct.id,
     seg:ct.seguradora,ramo:ramoNome,ramoCls:slugMap[ramoNome]||'ccvida',
     renovAuto:!!ct.renovacao_auto,
     apolice:ct.numero_apolice||'—',premio:premio,
@@ -5220,7 +5261,7 @@ async function hbAbrirContratoDB(ctId){
       {l:'Modalidade',v:ct.modalidade||'—'},
       {l:'Periocidade',v:ct.periodicidade||'—'},
       {l:'Forma de pagamento',v:ct.forma_pagamento||'—'},
-      {l:'Cliente',v:ct.clientes?ct.clientes.nome:'—'},
+      {l:'Vencimento',v:ct.dia_vencimento?('Dia '+ct.dia_vencimento):'—'},
       {l:'Comissão',v:(ct.comissao_pct||0)+'%'},
       {l:'Valor Comissão',v:'R$ '+parseFloat(ct.valor_comissao||0).toFixed(2).replace('.',','),green:true}
     ],
@@ -5576,7 +5617,7 @@ async function hbSalvarContratosPDF(){
       if(rendaV)updExtra.renda=rendaV;
       if(Object.keys(updExtra).length>0)await dbAtualizarCliente(cm.id,updExtra);
     }
-    var campos={cliente_id:cm.id,ramo_id:rm?rm.id:null,seguradora:seg,numero_apolice:(apoliceEl&&apoliceEl.value)||item.dados.apolice||'',modalidade:val('wc-ext-modalidade')||item.dados.modalidade||'',periodicidade:val('wc-ext-period')||item.dados.periodicidade||'',forma_pagamento:val('wc-ext-pgto')||item.dados.forma_pagamento||'',vigencia_inicio:toISO(item.dados.vigencia_ini),vigencia_fim:toISO(item.dados.vigencia_fim),valor_premio:premio,comissao_pct:comPct,valor_comissao:premio*comPct/100,status:'ativo'};
+    var campos={cliente_id:cm.id,ramo_id:rm?rm.id:null,seguradora:seg,numero_apolice:(apoliceEl&&apoliceEl.value)||item.dados.apolice||'',modalidade:val('wc-ext-modalidade')||item.dados.modalidade||'',periodicidade:val('wc-ext-period')||item.dados.periodicidade||'',forma_pagamento:val('wc-ext-pgto')||item.dados.forma_pagamento||'',dia_vencimento:val('wc-ext-venc')||item.dados.dia_vencimento||'',vigencia_inicio:toISO(item.dados.vigencia_ini),vigencia_fim:toISO(item.dados.vigencia_fim),valor_premio:premio,comissao_pct:comPct,valor_comissao:premio*comPct/100,status:'ativo'};
     var novo=await dbSalvarContrato(campos,bens,cobs);
     if(novo){
       await dbRegistrarHistorico(cm.id,'Contrato importado via PDF — '+seg,'contrato');
@@ -5631,7 +5672,7 @@ async function extrairTextoPDF(file) {
 
 // Manda o texto para Claude Haiku e retorna dados estruturados
 async function extrairDadosComIA(textoPDF, nomeArquivo) {
-  var prompt = 'Você é um especialista em apólices de seguros brasileiras. Analise o texto abaixo e extraia os dados em JSON.\n\nRetorne APENAS o JSON, sem explicações, sem markdown, sem ```.\n\nFormato:\n{"cliente":"","cpf":"","sexo":"","data_nascimento":"AAAA-MM-DD","estado_civil":"","profissao":"","email":"","telefone":"","cep":"","rua":"","numero":"","complemento":"","bairro":"","cidade":"","estado":"UF","ramo":"","seguradora":"","apolice":"","modalidade":"","periodicidade":"","forma_pagamento":"","vigencia_ini":"DD/MM/AA","vigencia_fim":"DD/MM/AA","valor":"","comissao_pct":"","beneficiarios":[{"relacao":"","nome":"","percentual":""}],"coberturas":[{"nome":"","valor":""}]}\n\nSe não encontrar um campo, deixe em branco. IMPORTANTE: se o documento for uma PROPOSTA ou ESTUDO (não apólice emitida), extraia mesmo assim o que houver.\nRamos válidos: Seguro de Vida, Plano de Saúde, Seguro Auto, Consórcio, Seg. Residencial\n\nTexto da apólice:\n' + textoPDF.substring(0, 6000);
+  var prompt = 'Você é um especialista em apólices de seguros brasileiras. Analise o texto abaixo e extraia os dados em JSON.\n\nRetorne APENAS o JSON, sem explicações, sem markdown, sem ```.\n\nFormato:\n{"cliente":"","cpf":"","sexo":"","data_nascimento":"AAAA-MM-DD","estado_civil":"","profissao":"","email":"","telefone":"","cep":"","rua":"","numero":"","complemento":"","bairro":"","cidade":"","estado":"UF","ramo":"","seguradora":"","apolice":"","modalidade":"","periodicidade":"","forma_pagamento":"","dia_vencimento":"DD","vigencia_ini":"DD/MM/AA","vigencia_fim":"DD/MM/AA","valor":"","comissao_pct":"","beneficiarios":[{"relacao":"","nome":"","percentual":""}],"coberturas":[{"nome":"","valor":""}]}\n\nSe não encontrar um campo, deixe em branco. IMPORTANTE: se o documento for uma PROPOSTA ou ESTUDO (não apólice emitida), extraia mesmo assim o que houver.\nRamos válidos: Seguro de Vida, Plano de Saúde, Seguro Auto, Consórcio, Seg. Residencial\n\nTexto da apólice:\n' + textoPDF.substring(0, 6000);
 
   var response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -5792,6 +5833,7 @@ function buildWizReview() {
         '<div class="wiz-mi-field"><span class="wiz-mi-label">Modalidade</span><input class="wiz-mi-input wc-ext-modalidade" data-idx="' + idx + '" placeholder="Ex: Vida Individual" value="' + (d.modalidade||'') + '"></div>' +
         '<div class="wiz-mi-field"><span class="wiz-mi-label">Periodicidade</span><input class="wiz-mi-input wc-ext-period" data-idx="' + idx + '" placeholder="Ex: Mensal" value="' + (d.periodicidade||'') + '"></div>' +
         '<div class="wiz-mi-field"><span class="wiz-mi-label">Forma de pagamento</span><input class="wiz-mi-input wc-ext-pgto" data-idx="' + idx + '" placeholder="Ex: Cartão de crédito" value="' + (d.forma_pagamento||'') + '"></div>' +
+        '<div class="wiz-mi-field"><span class="wiz-mi-label">Dia de vencimento</span><input class="wiz-mi-input wc-ext-venc" data-idx="' + idx + '" placeholder="Ex: 10" value="' + (d.dia_vencimento||'') + '"></div>' +
         '<div class="wiz-mi-field"><span class="wiz-mi-label">Sexo</span><input class="wiz-mi-input wc-ext-sexo" data-idx="' + idx + '" value="' + (d.sexo||'') + '"></div>' +
         '<div class="wiz-mi-field"><span class="wiz-mi-label">Renda mensal</span><input class="wiz-mi-input wc-ext-renda" data-idx="' + idx + '" placeholder="Preencha manualmente" value=""></div>' +
         cobSection +
@@ -6027,7 +6069,7 @@ function handleWizXls(inp){
 
 // ── DADOS PESSOAIS — EDITAR (modal igual à página do contrato) ──
 var pdataFields={
-  'pdata-info':{title:'Informações Pessoais',ids:[['nome','Nome completo'],['cpf','CPF'],['nasc','Data de nascimento'],['prof','Profissão'],['ecivil','Estado civil'],['email','E-mail'],['tel','Telefone']]},
+  'pdata-info':{title:'Informações Pessoais',ids:[['nome','Nome completo'],['cpf','CPF'],['nasc','Data de nascimento'],['prof','Profissão'],['ecivil','Estado civil'],['sexo','Sexo'],['renda','Renda mensal'],['email','E-mail'],['tel','Telefone']]},
   'pdata-end':{title:'Endereço',ids:[['cep','CEP'],['num','Número'],['rua','Rua'],['comp','Complemento'],['bairro','Bairro'],['cidade','Cidade'],['estado','Estado']]}
 };
 function openPdataModal(section){
