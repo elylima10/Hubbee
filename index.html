@@ -724,7 +724,7 @@ html,body{
 .wiz-pdf-item-icon{width:36px;height:36px;border-radius:10px;background:rgba(220,38,38,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .wiz-pdf-item-name{flex:1;font-size:14px;font-weight:500;letter-spacing:-0.04em;color:#F0F0F2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wiz-pdf-item-size{font-size:12px;font-weight:400;letter-spacing:-0.04em;color:#8696B0;flex-shrink:0}
-.wiz-pdf-item-rm{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:#1C2127;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s}
+.wiz-pdf-item-rm{color:#F0F0F2;width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:#1C2127;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s}
 .wiz-pdf-item-rm:hover{border-color:#FF6B6B;background:rgba(220,38,38,0.18)}
 /* Processing state */
 .wiz-processing{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:64px 24px;text-align:center}
@@ -2306,6 +2306,7 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
   .au-row2{grid-template-columns:1fr}
 }
 
+#ctDelConfirmInput::placeholder,#pfDelConfirmInput::placeholder{color:#8696B0;opacity:1}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
@@ -3383,7 +3384,7 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
       </div>
       <div class="ct-del-title">Excluir contrato permanentemente?</div>
       <div class="ct-del-sub">Esta ação <strong>não pode ser desfeita</strong>. O contrato será removido do cliente e do histórico de carteira. Para confirmar, digite <strong>EXCLUIR</strong> abaixo.</div>
-      <input type="text" id="ctDelConfirmInput" placeholder="Digite EXCLUIR" oninput="checkDelConfirm(this)" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-family:'Bricolage Grotesque',sans-serif;font-size:15px;letter-spacing:0.04em;text-align:center;color:#F0F0F2;outline:none;text-transform:uppercase">
+      <input type="text" id="ctDelConfirmInput" placeholder="Digite EXCLUIR" oninput="checkDelConfirm(this)" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-family:'Bricolage Grotesque',sans-serif;font-size:15px;letter-spacing:0.04em;text-align:center;color:#151A1D;background:#F0F0F2;outline:none;text-transform:uppercase">
       <div class="ct-del-actions">
         <button class="ct-del-btn-del" id="ctDelConfirmBtn" onclick="excluirContrato()" disabled style="opacity:.4;cursor:not-allowed">
           Excluir permanentemente
@@ -3393,6 +3394,24 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
     </div>
   </div>
 
+  <div class="ct-del-overlay" id="pfDelOverlay" onclick="if(event.target===this)closePfDelete()">
+    <div class="ct-del-modal">
+      <div class="ct-del-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      </div>
+      <div class="ct-del-title">Excluir cliente permanentemente?</div>
+      <div class="ct-del-sub">Esta ação <strong>não pode ser desfeita</strong>. Todos os contratos, beneficiários, coberturas, documentos e histórico deste cliente serão apagados. Para confirmar, digite <strong>EXCLUIR</strong> abaixo.</div>
+      <input type="text" id="pfDelConfirmInput" placeholder="Digite EXCLUIR" oninput="checkPfDelConfirm(this)" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-family:'Bricolage Grotesque',sans-serif;font-size:15px;letter-spacing:0.04em;text-align:center;color:#151A1D;background:#F0F0F2;outline:none;text-transform:uppercase">
+      <div class="ct-del-actions">
+        <button class="ct-del-btn-del" id="pfDelConfirmBtn" onclick="hbExcluirClienteConfirmado()" disabled style="opacity:.4;cursor:not-allowed">
+          Excluir permanentemente
+        </button>
+        <button class="ct-del-btn-back" onclick="closePfDelete()">Voltar</button>
+      </div>
+    </div>
+  </div>
+
+  
   <!-- ═══ MODAL: EDITAR CONTRATO ═══ -->
   <div class="ct-edit-modal-overlay" id="ctEditModalOverlay" onclick="if(event.target===this)closeEditContratoModal()">
     <div class="ct-edit-modal">
@@ -4949,7 +4968,7 @@ var cwRamosRep=[
 var cwMetricCfg={
   receita:  {label:'Receita Mensal',   field:'receita',  money:true,  dec:0, sub:function(){return 'Comissão estimada · '+cwBRL(cwSumRep('comissao'));}},
   comissao: {label:'Comissão',         field:'comissao', money:true,  dec:0, sub:function(){return 'Sobre '+cwBRL(cwSumRep('receita'))+' de receita';}},
-  contratos:{label:'Contratos ativos', field:'contratos',money:false, dec:0, sub:function(){return 'em 150 clientes ativos';}},
+  contratos:{label:'Contratos ativos', field:'contratos',money:false, dec:0, sub:function(){return 'em '+(_M?_M.totalClientes:0)+' clientes ativos';}},
   ticket:   {label:'Ticket médio',     field:'ticket',   money:true,  dec:2, sub:function(){return 'Média por contrato ativo';}}
 };
 function cwNum(n,dec){return Number(n).toLocaleString('pt-BR',{minimumFractionDigits:dec||0,maximumFractionDigits:dec||0});}
@@ -5907,7 +5926,7 @@ function renderWizPdfList(){
   wcFiles.forEach(function(f,i){
     var size=(f.size/1024/1024).toFixed(1)+" MB";
     var item=document.createElement("div");item.className="wiz-pdf-item";
-    item.innerHTML='<div class="wiz-pdf-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><span class="wiz-pdf-item-name">'+f.name+'</span><span class="wiz-pdf-item-size">'+size+'</span><button class="wiz-pdf-item-rm" onclick="removeWizFile('+i+')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+    item.innerHTML='<div class="wiz-pdf-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><span class="wiz-pdf-item-name">'+f.name+'</span><span class="wiz-pdf-item-size">'+size+'</span><button class="wiz-pdf-item-rm" onclick="removeWizFile('+i+')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#F0F0F2" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
     list.appendChild(item);
   });
   if(wcFiles.length>0)dz.classList.add("has-files");
@@ -6097,7 +6116,7 @@ function renderWizPdfList(){
   wcFiles.forEach(function(f,i){
     var size=(f.size/1024/1024).toFixed(1)+" MB";
     var item=document.createElement("div");item.className="wiz-pdf-item";
-    item.innerHTML='<div class="wiz-pdf-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><span class="wiz-pdf-item-name">'+f.name+'</span><span class="wiz-pdf-item-size">'+size+'</span><button class="wiz-pdf-item-rm" onclick="removeWizFile('+i+')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+    item.innerHTML='<div class="wiz-pdf-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><span class="wiz-pdf-item-name">'+f.name+'</span><span class="wiz-pdf-item-size">'+size+'</span><button class="wiz-pdf-item-rm" onclick="removeWizFile('+i+')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#F0F0F2" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
     list.appendChild(item);
   });
   if(wcFiles.length>0){dz.classList.add("has-files");}
@@ -6736,6 +6755,13 @@ function hbRenderCarteira(m){
   grid.innerHTML='';
   grid.appendChild(frag);
   if(addBtn)grid.appendChild(addBtn);
+  cwRamosRep=(m.ramos||[]).map(function(r){
+    var st=null;
+    Object.keys(m.porRamo).forEach(function(k){if(m.porRamo[k].slug===r.slug)st=m.porRamo[k];});
+    st=st||{comissao:0,receita:0,contratos:0};
+    return{k:r.slug,nome:r.nome,color:r.cor,contratos:st.contratos,receita:st.receita,comissao:st.comissao,ticket:st.contratos>0?st.receita/st.contratos:0};
+  });
+  if(typeof cwRenderReport==='function')cwRenderReport();
 }
 
 // ── PÁGINA DO RAMO com dados reais ─────────────────────────
@@ -6858,9 +6884,22 @@ async function hbInativarCliente(){
   navTo('clientes',document.getElementById('ni-clientes'));
 }
 
-async function hbExcluirCliente(){
+function hbExcluirCliente(){
   if(!_perfilClienteId)return;
-  if(!confirm('EXCLUIR PERMANENTEMENTE este cliente?\n\nTodos os contratos, beneficiários, coberturas, documentos e histórico serão apagados. Essa ação não pode ser desfeita.'))return;
+  var inp=document.getElementById('pfDelConfirmInput');
+  if(inp){inp.value='';checkPfDelConfirm(inp);}
+  document.getElementById('pfDelOverlay').classList.add('open');
+}
+function closePfDelete(){document.getElementById('pfDelOverlay').classList.remove('open');}
+function checkPfDelConfirm(inp){
+  var btn=document.getElementById('pfDelConfirmBtn');
+  var ok=inp.value.trim().toUpperCase()==='EXCLUIR';
+  btn.disabled=!ok;
+  btn.style.opacity=ok?'1':'.4';
+  btn.style.cursor=ok?'pointer':'not-allowed';
+}
+async function hbExcluirClienteConfirmado(){
+  closePfDelete();
   var r=await _supa.from('clientes').delete().eq('id',_perfilClienteId);
   if(r.error){showToast('Erro ao excluir cliente.');return;}
   showToast('Cliente excluído permanentemente.');
