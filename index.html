@@ -5843,7 +5843,9 @@ async function extrairDadosComIA(textoPDF, nomeArquivo) {
   });
 
   if (!response.ok) {
-    console.error('Claude API error:', response.status);
+    var errTxt='';
+    try{ var ej=await response.json(); errTxt=JSON.stringify(ej); }catch(e){ try{errTxt=await response.text();}catch(e2){} }
+    console.error('Claude API error:', response.status, errTxt);
     return null;
   }
   var data = await response.json();
