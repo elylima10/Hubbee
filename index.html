@@ -485,11 +485,11 @@ html,body{
 
 /* TAGS */
 .tag{display:inline-flex;align-items:center;padding:3px 14px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:-0.04em;white-space:nowrap;border:1.5px solid}
-.tag-vida{background:rgba(220,38,38,0.18);border:none;color:#FF6B6B;padding:3px 10px}
-.tag-auto{background:rgba(59,110,240,0.18);border:none;color:#7AA7FF;padding:3px 10px}
-.tag-saude{background:rgba(5,150,105,0.18);border:none;color:#34D399;padding:3px 10px}
-.tag-cons{background:rgba(217,119,6,0.18);border:none;color:#F5A623;padding:3px 10px}
-.tag-rc{background:rgba(124,58,237,0.18);border:none;color:#A78BFA;padding:3px 10px}
+.tag-vida{background:rgba(3,200,0,0.16);border:none;color:#03C800;padding:3px 10px}
+.tag-auto{background:rgba(0,166,185,0.16);border:none;color:#00A6B9;padding:3px 10px}
+.tag-saude{background:rgba(0,144,239,0.16);border:none;color:#0090EF;padding:3px 10px}
+.tag-cons{background:rgba(255,119,0,0.16);border:none;color:#FF7700;padding:3px 10px}
+.tag-rc{background:rgba(155,73,248,0.16);border:none;color:#9B49F8;padding:3px 10px}
 .tag-plus{background:rgba(255,255,255,0.08);border:none;color:#8696B0;padding:3px 10px}
 
 /* ── PROFILE ── */
@@ -1730,6 +1730,14 @@ table.cw-table td{padding:14px 16px;font-size:14px;letter-spacing:-0.04em;vertic
 .bcrumb-sep{color:#D1D5DB;font-size:11px}
 .bcrumb-current{color:#F0F0F2;font-weight:500}
 
+.hb-mailmenu-ov{position:fixed;inset:0;z-index:120;display:none}
+.hb-mailmenu-ov.on{display:block}
+.hb-mailmenu{position:absolute;min-width:246px;background:#1E2529;border:1px solid rgba(255,255,255,0.09);border-radius:16px;padding:6px;box-shadow:0 18px 44px rgba(0,0,0,0.55);overflow:hidden}
+.hb-mailmenu-head{display:flex;align-items:center;gap:9px;padding:11px 12px 12px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:4px}
+.hb-mailmenu-head span{font-size:13px;font-weight:600;letter-spacing:-0.04em;color:#F0F0F2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb-mailmenu-item{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;cursor:pointer;font-size:14px;font-weight:500;letter-spacing:-0.04em;color:#F0F0F2;background:none;border:none;width:100%;text-align:left;text-decoration:none}
+.hb-mailmenu-item:hover{background:rgba(255,255,255,0.06)}
+.hb-mailmenu-item svg{flex-shrink:0}
 .ct-edit-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:90;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
 .ct-edit-modal-overlay.open{display:flex}
 .ct-edit-modal{background:#1C2127;border-radius:20px;padding:0;width:520px;max-width:calc(100vw - 40px);box-shadow:0 20px 60px rgba(0,0,0,.18);overflow:hidden}
@@ -2806,10 +2814,8 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
           </div>
           <button class="ver-todos-red">ver todos</button>
         </div>
-        <div class="alert-list">
-          <div class="alert-row"><div><div class="contact-name">Carlos Mendes</div><div class="contact-sub">Seguro de Vida - MAG</div></div><span class="tag-pill tag-red">Vence em 7 dias</span></div>
-          <div class="alert-row"><div><div class="contact-name">Adriana Silva</div><div class="contact-sub">Seguro Auto - Porto Seguro</div></div><span class="tag-pill tag-red">Vence em 13 dias</span></div>
-          <div class="alert-row"><div><div class="contact-name">Kleber Machado de Lima</div><div class="contact-sub">Plano de Saúde - Amil</div></div><span class="tag-pill tag-orange">Vence em 22 dias</span></div>
+        <div class="alert-list" id="dashAlertList">
+          <div style="color:#8696B0;padding:14px 0">Carregando…</div>
         </div>
       </div>
       <div class="card">
@@ -2820,10 +2826,8 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
           </div>
           <button class="ver-todos-green">ver todos</button>
         </div>
-        <div class="alert-list">
-          <div class="alert-row"><div><div class="contact-name">Carlos Mendes</div><div class="contact-sub">Novo contrato · Seguro de Vida Azos</div></div><span class="tag-pill tag-green">Hoje</span></div>
-          <div class="alert-row"><div><div class="contact-name">Fernanda Costa</div><div class="contact-sub">Novo cliente · cadastro via planilha</div></div><span class="tag-pill tag-green">Ontem</span></div>
-          <div class="alert-row"><div><div class="contact-name">Carlos Mendes</div><div class="contact-sub">Contrato cancelado · Bradesco Top3</div></div><span class="tag-pill tag-red">Há 2 dias</span></div>
+        <div class="alert-list" id="dashAtivList">
+          <div style="color:#8696B0;padding:14px 0">Carregando…</div>
         </div>
       </div>
     </div>
@@ -2885,19 +2889,13 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
         </div>
         <div class="donut-outer">
           <div class="donut-svg-wrap">
-            <svg viewBox="0 0 120 120" width="160" height="160" style="transform:rotate(-90deg)">
+            <svg id="donutSvg" viewBox="0 0 120 120" width="160" height="160" style="transform:rotate(-90deg)">
               <circle cx="60" cy="60" r="46" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="14"/>
-              <circle cx="60" cy="60" r="46" fill="none" stroke="#16A34A" stroke-width="14" stroke-dasharray="101 188" stroke-dashoffset="0"/>
-              <circle cx="60" cy="60" r="46" fill="none" stroke="#3B6EF0" stroke-width="14" stroke-dasharray="154 135" stroke-dashoffset="-101"/>
-              <circle cx="60" cy="60" r="46" fill="none" stroke="#93C5FD" stroke-width="14" stroke-dasharray="34 255" stroke-dashoffset="-255"/>
             </svg>
-            <div class="donut-center" style="flex-direction:column"><span class="donut-pct" style="font-size:21px">R$ 8.420</span><span style="font-size:11px;color:#8696B0;font-weight:500">comissão/mês</span></div>
+            <div class="donut-center" style="flex-direction:column"><span class="donut-pct" id="donutCenter" style="font-size:21px">—</span><span style="font-size:11px;color:#8696B0;font-weight:500">comissão/mês</span></div>
           </div>
-          <div class="donut-legend">
-            <div class="legend-row"><div class="legend-dot" style="background:#16A34A"></div>Seguros · R$ 2.950</div>
-            <div class="legend-row"><div class="legend-dot" style="background:#3B6EF0"></div>Saúde · R$ 4.490</div>
-            <div class="legend-row"><div class="legend-dot" style="background:#93C5FD"></div>Consórcio · R$ 980</div>
-            
+          <div class="donut-legend" id="donutLegend">
+            <div style="color:#8696B0">Carregando…</div>
           </div>
         </div>
       </div>
@@ -3520,7 +3518,7 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
           <div class="ncli-namerow">
             <div class="ncli-name" id="perfilNome">Carlos Mendes</div>
           </div>
-          <a href="mailto:carlos.mendes@email.com" id="perfilEmailLink" class="ncli-email">
+          <a href="#" id="perfilEmailLink" class="ncli-email" onclick="return hbEmailMenu(event)">
             <svg class="ncli-email-ico" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M7 8.5L9.94202 10.2394C11.6572 11.2535 12.3428 11.2535 14.058 10.2394L17 8.5" stroke-linecap="round"></path><path d="M2.01577 13.4756C2.08114 16.5412 2.11383 18.0739 3.24496 19.2094C4.37608 20.3448 5.95033 20.3843 9.09883 20.4634C11.0393 20.5122 12.9607 20.5122 14.9012 20.4634C18.0497 20.3843 19.6239 20.3448 20.7551 19.2094C21.8862 18.0739 21.9189 16.5412 21.9842 13.4756C22.0053 12.4899 22.0053 11.5101 21.9842 10.5244C21.9189 7.45886 21.8862 5.92609 20.7551 4.79066C19.6239 3.65523 18.0497 3.61568 14.9012 3.53657C12.9607 3.48781 11.0393 3.48781 9.09882 3.53656C5.95033 3.61566 4.37608 3.65521 3.24495 4.79065C2.11382 5.92608 2.08114 7.45885 2.01576 10.5244C1.99474 11.5101 1.99475 12.4899 2.01577 13.4756Z"></path></svg>
             <span id="perfilEmail">carlos.mendes@email.com</span>
           </a>
@@ -4154,7 +4152,7 @@ var clients=[
   {n:"Fernando Costa Neto",t:["vida","saude"],s:"22/01/2025",st:"ok"},
   {n:"Luciana Almeida Pires",t:["vida"],s:"11/04/2024",st:"ok"}
 ];
-var TL={vida:"Vida",auto:"Auto",saude:"Saúde",cons:"Consórcio",rc:"Resp. Civil",plus:"+2"};
+var TL={vida:"Seguro de Vida",auto:"Seguro Auto",saude:"Plano de Saúde",cons:"Consórcio",rc:"Seg. Residencial",plus:"+2"};
 var TC={vida:"tag-vida",auto:"tag-auto",saude:"tag-saude",cons:"tag-cons",rc:"tag-rc",plus:"tag-plus"};
 
 var clientsCancelled=[
@@ -5161,10 +5159,70 @@ function renderRamoTable(){
     });
   }
   var tb=document.getElementById("ramoClientTable");
-  tb.innerHTML=rows.map(function(r){
-    return'<tr onclick="navTo(\'perfil\',null)"><td><div class="cw-td-cliente">'+r.nome+'</div></td><td style="color:#8696B0;font-size:13px">'+r.seg+'</td><td class="cw-td-valor">'+r.val+'</td><td class="cw-td-com">'+ramoComStr(r.val)+'</td><td>'+statusIconText(/cancel/i.test(r.st)?"cancelado":/vence/i.test(r.st)?"renovar":"ativo",r.st,15)+'</td></tr>';
+  tb.innerHTML=rows.map(function(r,i){
+    return'<tr onclick="hbAbrirPerfilRamo('+i+')"><td><div class="cw-td-cliente">'+r.nome+'</div></td><td style="color:#8696B0;font-size:13px">'+r.seg+'</td><td class="cw-td-valor">'+r.val+'</td><td class="cw-td-com">'+ramoComStr(r.val)+'</td><td>'+statusIconText(/cancel/i.test(r.st)?"cancelado":/vence/i.test(r.st)?"renovar":"ativo",r.st,15)+'</td></tr>';
   }).join('');
+  _ramoRowsView=rows;
 }
+var _ramoRowsView=[];
+function hbAbrirPerfilRamo(i){
+  var r=_ramoRowsView[i];
+  if(!r||!r.cid||!_M){navTo('perfil',null);return;}
+  var cli=_M.clientes.find(function(x){return x.id===r.cid;});
+  if(cli)hbAbrirPerfil(cli); else navTo('perfil',null);
+}
+// ── Menu de e-mail (Outlook / Gmail / Copiar) ──────────────
+var HB_MAIL_OUTLOOK='https://outlook.live.com/mail/0/deeplink/compose?to=';
+var HB_MAIL_GMAIL='https://mail.google.com/mail/?view=cm&fs=1&to=';
+function hbCloseMailMenu(){
+  var ov=document.getElementById('hbMailMenuOv');
+  if(ov)ov.classList.remove('on');
+}
+function hbEmailMenu(e){
+  e.preventDefault();e.stopPropagation();
+  var el=document.getElementById('perfilEmail');
+  var mail=el?(el.textContent||'').trim():'';
+  if(!mail||mail==='Sem e-mail'){showToast('Cliente sem e-mail cadastrado');return false;}
+  var ov=document.getElementById('hbMailMenuOv');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='hbMailMenuOv';ov.className='hb-mailmenu-ov';
+    ov.onclick=function(ev){if(ev.target===ov)hbCloseMailMenu();};
+    document.body.appendChild(ov);
+  }
+  var esc=mail.replace(/"/g,'&quot;');
+  var icoMail='<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#8696B0" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7.5l8.5 5.5 8.5-5.5" stroke-linecap="round"/></svg>';
+  var icoOut='<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0090EF" stroke-width="1.5" stroke-linejoin="round"><rect x="2.5" y="6" width="10" height="12" rx="2"/><path d="M12.5 8.5H20a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5h-7.5" stroke-linecap="round"/><path d="M5.6 10.6a2.2 2.6 0 1 0 3.8 0 2.2 2.6 0 1 0-3.8 0"/></svg>';
+  var icoGm='<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#EA4335" stroke-width="1.5" stroke-linejoin="round"><path d="M3 7.5v10a1.5 1.5 0 0 0 1.5 1.5H7V11l5 3.6L17 11v8h2.5A1.5 1.5 0 0 0 21 17.5v-10A1.7 1.7 0 0 0 18.3 6L12 10.6 5.7 6A1.7 1.7 0 0 0 3 7.5z"/></svg>';
+  var icoCp='<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#8696B0" stroke-width="1.5" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M15 9V6.5A2.5 2.5 0 0 0 12.5 4h-6A2.5 2.5 0 0 0 4 6.5v6A2.5 2.5 0 0 0 6.5 15H9" stroke-linecap="round"/></svg>';
+  ov.innerHTML='<div class="hb-mailmenu" id="hbMailMenu">'+
+    '<div class="hb-mailmenu-head">'+icoMail+'<span>'+esc+'</span></div>'+
+    '<a class="hb-mailmenu-item" target="_blank" rel="noopener" href="'+HB_MAIL_OUTLOOK+encodeURIComponent(mail)+'" onclick="hbCloseMailMenu()">'+icoOut+'Nova mensagem no Outlook</a>'+
+    '<a class="hb-mailmenu-item" target="_blank" rel="noopener" href="'+HB_MAIL_GMAIL+encodeURIComponent(mail)+'" onclick="hbCloseMailMenu()">'+icoGm+'Nova mensagem no Gmail</a>'+
+    '<button class="hb-mailmenu-item" onclick="hbCopiarEmail(\''+mail.replace(/'/g,"\\'")+'\')">'+icoCp+'Copiar</button>'+
+  '</div>';
+  ov.classList.add('on');
+  // posiciona logo abaixo do e-mail, sem sair da tela
+  var box=ov.querySelector('.hb-mailmenu');
+  var r=e.currentTarget.getBoundingClientRect();
+  var w=box.offsetWidth||246,h=box.offsetHeight||200;
+  var left=Math.min(r.left,window.innerWidth-w-12);
+  var top=(r.bottom+8+h>window.innerHeight)?Math.max(12,r.top-h-8):r.bottom+8;
+  box.style.left=Math.max(12,left)+'px';
+  box.style.top=top+'px';
+  return false;
+}
+function hbCopiarEmail(mail){
+  hbCloseMailMenu();
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(mail).then(function(){showToast('E-mail copiado');},function(){showToast('Não foi possível copiar');});
+  }else{
+    var t=document.createElement('textarea');t.value=mail;document.body.appendChild(t);t.select();
+    try{document.execCommand('copy');showToast('E-mail copiado');}catch(err){showToast('Não foi possível copiar');}
+    document.body.removeChild(t);
+  }
+}
+window.addEventListener('resize',hbCloseMailMenu);
 
 function toggleRamoSort(field){
   if(ramoSortField===field){ramoSortDir*=-1;}else{ramoSortField=field;ramoSortDir=1;}
@@ -6540,7 +6598,7 @@ function hbRenderDashboard(){
       var tg=slugFix[r.slug]||r.slug;
       r._tag=tg;
       if(typeof TC!=='undefined'&&!TC[tg])TC[tg]='tag-plus';
-      if(typeof TL!=='undefined'&&!TL[tg])TL[tg]=r.nome.replace('Seguro de ','').replace('Plano de ','').replace('Seg. ','');
+      if(typeof TL!=='undefined'&&!TL[tg])TL[tg]=r.nome;
     });
     // KPIs
     var cards=document.querySelectorAll('.metric-card');
@@ -6791,7 +6849,7 @@ function hbRenderCarteira(m){
           var vf=c.vigencia_fim?(function(d){var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0].slice(2);})(c.vigencia_fim):'—';
           var st=c.status==='ativo'?'Em dia':c.status==='renovar'?'Renovar':'Cancelado';
           var cls=c.status==='ativo'?'tag-green':c.status==='renovar'?'tag-orange':'tag-red';
-          return{nome:cli?cli.nome:'—',seg:c.seguradora,val:fmtBRL(parseFloat(c.valor_premio)||0),venc:vf,st:st,stcls:cls};
+          return{cid:c.cliente_id,nome:cli?cli.nome:'—',seg:c.seguradora,val:fmtBRL(parseFloat(c.valor_premio)||0),venc:vf,st:st,stcls:cls};
         });
         ramoData[key]=base;
       }
