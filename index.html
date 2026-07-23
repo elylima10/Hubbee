@@ -3203,10 +3203,8 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
         <tbody id="cl-tbody"></tbody>
       </table>
       <div class="clpag">
-        <span class="clpagi">Exibindo 15 de 150</span>
-        <div class="clpagb">
-          <div class="clpbtn">1</div><div class="clpbtn on">2</div><div class="clpbtn">3</div><div class="clpbtn">4</div><div class="clpbtn">&rsaquo;</div><div class="clpbtn">16</div>
-        </div>
+        <span class="clpagi" id="clPagInfo">—</span>
+        <div class="clpagb" id="clPagBtns" style="display:none"></div>
       </div>
     </div>
     <!-- ── QUAL CLIENTE AINDA NÃO TEM ── -->
@@ -4074,6 +4072,13 @@ async function dbRegistrarHistorico(clienteId, desc, tipo, comentario) {
   await _supa.from('historico').insert({ corretor_id: HB.user.id, cliente_id: clienteId, descricao: desc, tipo: tipo || 'nota', comentario: comentario || null });
 }
 async function dbListarHistorico(clienteId) { var r = await _supa.from('historico').select('*').eq('cliente_id', clienteId).order('data', { ascending: false }); return r.data || []; }
+async function dbExcluirContrato(id) {
+  await _supa.from('beneficiarios').delete().eq('contrato_id', id);
+  await _supa.from('coberturas').delete().eq('contrato_id', id);
+  await _supa.from('documentos').delete().eq('contrato_id', id);
+  var r = await _supa.from('contratos').delete().eq('id', id);
+  return !r.error;
+}
 async function dbListarRamos() { var r = await _supa.from('ramos').select('*').order('nome'); return r.data || []; }
 async function dbMetricas(){
   var contratos=await dbListarContratos();
@@ -4915,8 +4920,25 @@ function reativarContrato(){
   showToast('Contrato reativado');
 }
 
-function excluirContrato(){
+async function excluirContrato(){
   var d=contratoData[currentContratoKey];
+  var dbId=d&&d._dbId;
+  if(dbId){
+    var btn=document.getElementById('ctDelConfirmBtn');
+    if(btn){btn.disabled=true;btn.style.opacity='.4';}
+    var ok=await dbExcluirContrato(dbId);
+    if(!ok){showToast('Erro ao excluir o contrato.');if(btn){btn.disabled=false;btn.style.opacity='1';}return;}
+    if(_perfilClienteId)await dbRegistrarHistorico(_perfilClienteId,'Contrato excluído — '+d.seg+' ('+d.ramo+')','contrato');
+    closeDeleteContrato();
+    navTo("perfil",null);
+    showToast('Contrato excluído permanentemente');
+    if(_perfilClienteId){
+      hbCarregarContratosNoPerfil(_perfilClienteId);
+      hbCarregarHistoricoNoPerfil(_perfilClienteId);
+    }
+    hbRenderDashboard();
+    return;
+  }
   var card=document.querySelector('[onclick="openContrato(\''+currentContratoKey+'\')"]');
   if(card)card.remove();
   if(d)addHistorico('Contrato excluído — '+d.seg+' ('+d.ramo+')',false);
@@ -6725,9 +6747,9 @@ function hbRenderClientes(lista, contratosAll){
   var pgSub=document.getElementById('pgsub');
   if(pgSub&&pgSub.textContent.indexOf('clientes')>-1) pgSub.textContent=clients.length+' clientes ativos';
   // Atualiza badge de ativos
-  var badgeAtivos=document.querySelector('.cl-tab[data-tab="ativos"] .cl-tab-count');
+  var badgeAtivos=document.querySelector('.cltab[data-tab="ativos"] .clbadge');
   if(badgeAtivos) badgeAtivos.textContent=clients.length;
-  var badgeCancelados=document.querySelector('.cl-tab[data-tab="cancelados"] .cl-tab-count');
+  var badgeCancelados=document.querySelector('.cltab[data-tab="cancelados"] .clbadge');
   if(badgeCancelados) badgeCancelados.textContent=clientsCancelled.length;
   var g=document.getElementById('clGrid');if(g){g.innerHTML='';renderClientCards();}
   renderClients();
