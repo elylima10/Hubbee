@@ -2714,7 +2714,7 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
     </button>
   </nav>
 
-  <div class="s-footer">
+  <div class="s-footer" onclick="navTo('conta',null)" style="cursor:pointer">
     <div class="s-footer-av" id="sFooterAv">EL</div>
     <div>
       <div class="s-footer-name" id="sFooterName">Ely Lima</div>
@@ -2742,7 +2742,7 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
       <div class="mobile-topbar-pagesub" id="mobile-pgsub">Visão geral do seu negócio</div>
     </div>
     <div class="mobile-topbar-right">
-      <div class="mobile-avatar">EL</div>
+      <div class="mobile-avatar" onclick="navTo('conta',null)" style="cursor:pointer">EL</div>
     </div>
   </div>
 
@@ -3155,6 +3155,20 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
       <div class="ar-modal-footer">
         <button class="ar-btn-sec" onclick="closeEditRamoModal()">Cancelar</button>
         <button class="ar-btn-pri" onclick="saveEditRamo()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ar-overlay" id="ctaOverlay" onclick="if(event.target===this)closeEditContaModal()">
+    <div class="ar-modal">
+      <div class="ar-modal-title">Editar meus dados</div>
+      <div class="ar-modal-sub">Suas informações de cadastro no Hubbee.</div>
+      <div class="ar-field"><label>Nome</label><input type="text" id="ctaEditNome" placeholder="Seu nome"></div>
+      <div class="ar-field"><label>Nome da corretora</label><input type="text" id="ctaEditCorretora" placeholder="Ex.: EDL Seguros"></div>
+      <div class="ar-field"><label>E-mail</label><input type="text" id="ctaEditEmail" disabled style="opacity:.55;cursor:not-allowed"></div>
+      <div class="ar-modal-footer">
+        <button class="ar-btn-sec" onclick="closeEditContaModal()">Cancelar</button>
+        <button class="ar-btn-pri" onclick="saveEditConta()">Salvar</button>
       </div>
     </div>
   </div>
@@ -3678,6 +3692,51 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
 
   </div><!-- /pg-perfil -->
 
+  <!-- ═══ PAGE: MINHA CONTA (perfil do usuário) ═══ -->
+  <div class="page" id="pg-conta">
+    <div class="ncli-head" style="margin-bottom:28px">
+      <div class="ncli-left">
+        <div class="ncli-stripe"></div>
+        <div style="width:76px;height:76px;border-radius:50%;background:#292E3E;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#F5B104;flex-shrink:0;position:relative;flex-shrink:0">
+          <span id="ctaAv">EL</span>
+          <button onclick="showToast('Envio de foto em breve')" style="position:absolute;bottom:-2px;right:-2px;width:24px;height:24px;border-radius:50%;background:#F5B104;border:2px solid #151A1D;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#151A1D" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+        <div class="ncli-info">
+          <div class="ncli-namerow">
+            <div class="ncli-name" id="ctaNome">—</div>
+            <button class="pdata-edit" style="margin-top:0" onclick="openEditContaModal()">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.655 0.572479H3.47156C1.67587 0.572479 0.549988 1.84378 0.549988 3.64356V8.49867C0.549988 10.2985 1.67061 11.5698 3.47156 11.5698H8.62446C10.426 11.5698 11.5466 10.2985 11.5466 8.49867V6.14645M7.79984 1.63154L10.4662 4.29793M4.09904 5.32129L8.46301 0.957305C9.00668 0.414215 9.88788 0.414215 10.4316 0.957305L11.1422 1.66799C11.6859 2.21167 11.6859 3.09346 11.1422 3.63655L6.75725 8.02156C6.51957 8.25924 6.19723 8.39296 5.86086 8.39296H3.67333L3.72823 6.18557C3.7364 5.86088 3.86896 5.55138 4.09904 5.32129Z" stroke="#8696B0" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Editar
+            </button>
+          </div>
+          <div style="font-size:15px;font-weight:600;letter-spacing:-0.04em;color:#F5B104;margin-top:2px" id="ctaCorretora">—</div>
+          <div style="font-size:14px;color:#8696B0;margin-top:2px" id="ctaEmail">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:24px;max-width:640px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div style="font-size:16px;font-weight:600;letter-spacing:-0.04em;color:#F0F0F2">Assinatura</div>
+        <button class="pdata-edit" onclick="showToast('Gestão de assinatura em breve')">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.655 0.572479H3.47156C1.67587 0.572479 0.549988 1.84378 0.549988 3.64356V8.49867C0.549988 10.2985 1.67061 11.5698 3.47156 11.5698H8.62446C10.426 11.5698 11.5466 10.2985 11.5466 8.49867V6.14645M7.79984 1.63154L10.4662 4.29793M4.09904 5.32129L8.46301 0.957305C9.00668 0.414215 9.88788 0.414215 10.4316 0.957305L11.1422 1.66799C11.6859 2.21167 11.6859 3.09346 11.1422 3.63655L6.75725 8.02156C6.51957 8.25924 6.19723 8.39296 5.86086 8.39296H3.67333L3.72823 6.18557C3.7364 5.86088 3.86896 5.55138 4.09904 5.32129Z" stroke="#8696B0" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Editar
+        </button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 24px;margin-bottom:20px">
+        <div><div class="ncc-col-lbl">Assinatura</div><div class="ncc-col-val" style="color:#03C800;display:flex;align-items:center;gap:6px">✓ Ativa</div></div>
+        <div><div class="ncc-col-lbl">Cliente desde</div><div class="ncc-col-val" id="ctaDesde">—</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px 24px">
+        <div><div class="ncc-col-lbl">Periocidade</div><div class="ncc-col-val">Mensal</div></div>
+        <div><div class="ncc-col-lbl">Forma de pagamento</div><div class="ncc-col-val">Cartão de crédito</div></div>
+        <div><div class="ncc-col-lbl">Vencimento</div><div class="ncc-col-val">—</div></div>
+      </div>
+    </div>
+  </div><!-- /pg-conta -->
+
   <!-- ═══ PAGE: NOVO CONTRATO ═══ -->
   <div class="page wiz-page" id="pg-novo-contrato">
 
@@ -4033,6 +4092,46 @@ async function hbLoadCorretor() {
   var r = await _supa.from('corretores').select('*').eq('id', HB.user.id).single();
   HB.corretor = r.data; return r.data;
 }
+// ── Minha Conta (perfil do usuário) ────────────────────────
+async function hbRenderConta(){
+  if(!HB.corretor)await hbLoadCorretor();
+  var c=HB.corretor||{};
+  var nome=c.nome||'—';
+  var ini=nome.split(' ');
+  var iniciais=((ini[0]?ini[0][0]:'')+(ini[1]?ini[1][0]:'')).toUpperCase()||'HB';
+  var elAv=document.getElementById('ctaAv');if(elAv)elAv.textContent=iniciais;
+  var elNome=document.getElementById('ctaNome');if(elNome)elNome.textContent=nome;
+  var elCorretora=document.getElementById('ctaCorretora');if(elCorretora)elCorretora.textContent=c.corretora||'Corretor autônomo';
+  var elEmail=document.getElementById('ctaEmail');if(elEmail)elEmail.textContent=(HB.user&&HB.user.email)||c.email||'—';
+  var elDesde=document.getElementById('ctaDesde');
+  if(elDesde){
+    var d=c.created_at?new Date(c.created_at):null;
+    elDesde.textContent=d?(String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()):'—';
+  }
+}
+function openEditContaModal(){
+  var c=HB.corretor||{};
+  document.getElementById('ctaEditNome').value=c.nome||'';
+  document.getElementById('ctaEditCorretora').value=c.corretora||'';
+  document.getElementById('ctaEditEmail').value=(HB.user&&HB.user.email)||c.email||'';
+  document.getElementById('ctaOverlay').classList.add('open');
+}
+function closeEditContaModal(){document.getElementById('ctaOverlay').classList.remove('open');}
+async function saveEditConta(){
+  var nome=(document.getElementById('ctaEditNome').value||'').trim();
+  var corretora=(document.getElementById('ctaEditCorretora').value||'').trim();
+  if(!nome){showToast('Informe seu nome.');return;}
+  if(!HB.user){closeEditContaModal();return;}
+  var r=await _supa.from('corretores').update({nome:nome,corretora:corretora}).eq('id',HB.user.id).select().single();
+  if(r.error){showToast('Erro ao salvar. Tente novamente.');return;}
+  HB.corretor=r.data;
+  hbRenderConta();
+  var elFN=document.getElementById('sFooterName');if(elFN)elFN.textContent=nome;
+  var elFA=document.getElementById('sFooterAv');
+  if(elFA){var ini=nome.split(' ');elFA.textContent=((ini[0]?ini[0][0]:'')+(ini[1]?ini[1][0]:'')).toUpperCase()||'HB';}
+  closeEditContaModal();
+  showToast('Dados atualizados!');
+}
 async function dbListarClientes() {
   var r = await _supa.from('clientes').select('*').order('nome');
   return r.data || [];
@@ -4169,11 +4268,13 @@ var clientsCancelled=[
 
 var activeClientTab="ativos";
 var activeFilter="todos";
+var clPage=0;
 
 function switchClientTab(el){
   document.querySelectorAll(".cltab").forEach(function(t){t.classList.remove("on")});
   el.classList.add("on");
   activeClientTab=el.getAttribute("data-tab");
+  clPage=0;
   renderClients();
   renderClientCards(true);
 }
@@ -4308,6 +4409,7 @@ function initFilterDropdown(){
       menu.querySelectorAll(".clfilt-item").forEach(function(it){it.classList.remove("on")});
       li.classList.add("on");
       close();
+      clPage=0;
       renderClients();
       renderClientCards(true);
     });
@@ -4317,13 +4419,20 @@ function initFilterDropdown(){
 document.addEventListener("DOMContentLoaded",initFilterDropdown);
 
 function renderClients(){
+  var CL_PAGE_SIZE=10;
   var tb=document.getElementById("cl-tbody");
   var list=activeClientTab==="cancelados"?clientsCancelled:clients;
   if(activeFilter!=="todos") list=list.filter(function(c){return c.t.indexOf(activeFilter)>-1;});
+  var total=list.length;
+  var totalPages=Math.max(1,Math.ceil(total/CL_PAGE_SIZE));
+  if(clPage>totalPages-1)clPage=totalPages-1;
+  if(clPage<0)clPage=0;
+  var startIdx=clPage*CL_PAGE_SIZE;
+  var pageList=list.slice(startIdx,startIdx+CL_PAGE_SIZE);
   var info=document.getElementById('clPagInfo');
-  if(info)info.textContent='Exibindo '+list.length+' de '+list.length;
-  var pb=document.getElementById('clPagBtns');
-  if(pb)pb.style.display=list.length>15?'flex':'none';
+  if(info)info.textContent='Exibindo '+pageList.length+' de '+total;
+  renderClPagButtons(totalPages);
+  list=pageList;
   var ICON_EMAIL="<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linejoin='round'><path d='M7 8.5L9.94202 10.2394C11.6572 11.2535 12.3428 11.2535 14.058 10.2394L17 8.5' stroke-linecap='round'/><path d='M2.01577 13.4756C2.08114 16.5412 2.11383 18.0739 3.24496 19.2094C4.37608 20.3448 5.95033 20.3843 9.09883 20.4634C11.0393 20.5122 12.9607 20.5122 14.9012 20.4634C18.0497 20.3843 19.6239 20.3448 20.7551 19.2094C21.8862 18.0739 21.9189 16.5412 21.9842 13.4756C22.0053 12.4899 22.0053 11.5101 21.9842 10.5244C21.9189 7.45886 21.8862 5.92609 20.7551 4.79066C19.6239 3.65523 18.0497 3.61568 14.9012 3.53657C12.9607 3.48781 11.0393 3.48781 9.09882 3.53656C5.95033 3.61566 4.37608 3.65521 3.24495 4.79065C2.11382 5.92608 2.08114 7.45885 2.01576 10.5244C1.99474 11.5101 1.99475 12.4899 2.01577 13.4756Z'/></svg>";
   var ICON_TEL="<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'><path d='M14 3V6M19 5L17 7M21 10H18' stroke-linejoin='round'/><path d='M9.15825 5.71223L8.7556 4.80625C8.49232 4.21388 8.36068 3.91768 8.1638 3.69101C7.91707 3.40694 7.59547 3.19794 7.23567 3.08785C6.94858 3 6.62446 3 5.97621 3C5.02791 3 4.55375 3 4.15573 3.18229C3.68687 3.39702 3.26343 3.86328 3.09473 4.3506C2.95151 4.76429 2.99253 5.18943 3.07458 6.0397C3.94791 15.0902 8.90981 20.0521 17.9603 20.9254C18.8106 21.0075 19.2357 21.0485 19.6494 20.9053C20.1367 20.7366 20.603 20.3131 20.8177 19.8443C21 19.4462 21 18.9721 21 18.0238C21 17.3755 21 17.0514 20.9122 16.7643C20.8021 16.4045 20.5931 16.0829 20.309 15.8362C20.0823 15.6393 19.7861 15.5077 19.1937 15.2444L18.2878 14.8417C17.6462 14.5566 17.3255 14.4141 16.9995 14.3831C16.6876 14.3534 16.3731 14.3972 16.0811 14.5109C15.776 14.6297 15.5063 14.8544 14.967 15.3038C14.4301 15.7512 14.1617 15.9749 13.8337 16.0947C13.543 16.2009 13.1586 16.2403 12.8523 16.1951C12.5069 16.1442 12.2423 16.0029 11.7133 15.7201C10.0672 14.8405 9.15953 13.9328 8.27986 12.2867C7.99714 11.7577 7.85578 11.4931 7.80487 11.1477C7.75974 10.8414 7.79908 10.457 7.9053 10.1663C8.02512 9.83828 8.24881 9.56986 8.69619 9.033C9.14562 8.49368 9.37034 8.22402 9.48915 7.91891C9.60285 7.62694 9.64661 7.3124 9.61694 7.00048C9.58594 6.67452 9.44338 6.35376 9.15825 5.71223Z'/></svg>";
   var ICON_WA="<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5'><path d='M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 13.3789 2.27907 14.6926 2.78382 15.8877C3.06278 16.5481 3.20226 16.8784 3.21953 17.128C3.2368 17.3776 3.16334 17.6521 3.01642 18.2012L2 22L5.79877 20.9836C6.34788 20.8367 6.62244 20.7632 6.87202 20.7805C7.12161 20.7977 7.45185 20.9372 8.11235 21.2162C9.30745 21.7209 10.6211 22 12 22Z' stroke-linejoin='round'/><path d='M8.58815 12.3773L9.45909 11.2956C9.82616 10.8397 10.2799 10.4153 10.3155 9.80826C10.3244 9.65494 10.2166 8.96657 10.0008 7.58986C9.91601 7.04881 9.41086 7 8.97332 7C8.40314 7 8.11805 7 7.83495 7.12931C7.47714 7.29275 7.10979 7.75231 7.02917 8.13733C6.96539 8.44196 7.01279 8.65187 7.10759 9.07169C7.51023 10.8548 8.45481 12.6158 9.91948 14.0805C11.3842 15.5452 13.1452 16.4898 14.9283 16.8924C15.3481 16.9872 15.558 17.0346 15.8627 16.9708C16.2477 16.8902 16.7072 16.5229 16.8707 16.165C17 15.8819 17 15.5969 17 15.0267C17 14.5891 16.9512 14.084 16.4101 13.9992C15.0334 13.7834 14.3451 13.6756 14.1917 13.6845C13.5847 13.7201 13.1603 14.1738 12.7044 14.5409L11.6227 15.4118'/></svg>";
@@ -4332,9 +4441,37 @@ function renderClients(){
     var st=statusIconText(c.st==="ok"?"ativo":c.st==="cancel"?"cancelado":"renovar",c.st==="ok"?"Em dia":c.st==="cancel"?"Cancelado":"Renovar",15);
     var cont='<div class="clcont"><div class="bday-icon">'+ICON_EMAIL+'</div><div class="bday-icon">'+ICON_TEL+'</div><div class="bday-icon">'+ICON_WA+'</div></div>';
     var arrow='<div class="clcont-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="transform:scaleX(-1);color:#8696B0"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg></div>';
-    return '<tr onclick="hbAbrirPerfil(clients['+idx+'])" style="cursor:pointer"><td><span class="clnm">'+c.n+'</span></td><td><div class="cltags">'+tags+'</div></td><td style="color:#8696B0;font-size:14px;letter-spacing:-0.04em">'+c.s+'</td><td>'+st+'</td><td>'+cont+'</td><td>'+arrow+'</td></tr>';
+    return '<tr onclick="hbAbrirPerfil(_clRowsView['+idx+'])" style="cursor:pointer"><td><span class="clnm">'+c.n+'</span></td><td><div class="cltags">'+tags+'</div></td><td style="color:#8696B0;font-size:14px;letter-spacing:-0.04em">'+c.s+'</td><td>'+st+'</td><td>'+cont+'</td><td>'+arrow+'</td></tr>';
   }).join("");
+  _clRowsView=list;
 }
+var _clRowsView=[];
+function renderClPagButtons(totalPages){
+  var pb=document.getElementById('clPagBtns');
+  if(!pb)return;
+  if(totalPages<=1){pb.style.display='none';pb.innerHTML='';return;}
+  pb.style.display='flex';
+  var html='';
+  html+='<div class="clpbtn" onclick="clGoPage('+(clPage-1)+')" style="'+(clPage===0?'opacity:.35;pointer-events:none':'cursor:pointer')+'">&lsaquo;</div>';
+  var maxBtns=5;
+  var startP=Math.max(0,Math.min(clPage-2,totalPages-maxBtns));
+  startP=Math.max(0,startP);
+  var endP=Math.min(totalPages-1,startP+maxBtns-1);
+  if(startP>0){
+    html+='<div class="clpbtn" onclick="clGoPage(0)" style="cursor:pointer">1</div>';
+    if(startP>1)html+='<div class="clpbtn" style="pointer-events:none;opacity:.5">…</div>';
+  }
+  for(var i=startP;i<=endP;i++){
+    html+='<div class="clpbtn'+(i===clPage?' on':'')+'" onclick="clGoPage('+i+')" style="cursor:pointer">'+(i+1)+'</div>';
+  }
+  if(endP<totalPages-1){
+    if(endP<totalPages-2)html+='<div class="clpbtn" style="pointer-events:none;opacity:.5">…</div>';
+    html+='<div class="clpbtn" onclick="clGoPage('+(totalPages-1)+')" style="cursor:pointer">'+totalPages+'</div>';
+  }
+  html+='<div class="clpbtn" onclick="clGoPage('+(clPage+1)+')" style="'+(clPage===totalPages-1?'opacity:.35;pointer-events:none':'cursor:pointer')+'">&rsaquo;</div>';
+  pb.innerHTML=html;
+}
+function clGoPage(p){clPage=p;renderClients();var tw=document.querySelector('.cltw');if(tw)tw.scrollIntoView({block:'nearest'});}
 
 var pgtitles={dash:["Dashboard","Visão geral do seu negócio"],clientes:["Clientes","150 clientes ativos"],carteira:["Carteira","312 contratos ativos"],ramo:["",""],contrato:["",""],"novo-contrato":["Novo contrato",""],"novo-cliente":["Novo cliente",""]};
 
@@ -5590,7 +5727,7 @@ function navTo(pg,navEl){
     if(niClientes)niClientes.classList.add("active");
   }
   var topbar=document.querySelector(".topbar");
-  if(pg==="perfil"||pg==="contrato"){
+  if(pg==="perfil"||pg==="contrato"||pg==="conta"){
     if(topbar)topbar.style.display="none";
   } else {
     if(topbar)topbar.style.display="";
@@ -5615,6 +5752,7 @@ function navTo(pg,navEl){
     perfil.querySelectorAll(".ntab").forEach(function(t,i){t.classList.toggle("on",i===0)});
     document.querySelectorAll(".ptab-panel").forEach(function(p,i){p.classList.toggle("on",i===0)});
   }
+  if(pg==="conta"){hbRenderConta();}
   if(pg==="novo-contrato"){
     wcFiles=[];
     var wcList=document.getElementById("wcPdfList");if(wcList)wcList.innerHTML="";
@@ -6927,7 +7065,7 @@ function hbGlobalSearch(v){
       var cpf=(c._raw&&c._raw.cpf||'').replace(/\D/g,'');
       return c.n.toLowerCase().indexOf(v)!==-1||cpf.indexOf(v.replace(/\D/g,''))!==-1&&v.replace(/\D/g,'')!=='';
     });
-    clCardPage=0;clCardAllLoaded=false;
+    clCardPage=0;clCardAllLoaded=false;clPage=0;
     var g=document.getElementById('clGrid');if(g){g.innerHTML='';renderClientCards();}
     renderClients();
     var info=document.getElementById('clPagInfo');
