@@ -3693,7 +3693,7 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
   </div><!-- /pg-perfil -->
 
   <!-- ═══ PAGE: MINHA CONTA (perfil do usuário) ═══ -->
-  <div class="page" id="pg-conta">
+  <div class="page" id="pg-conta" style="padding-top:44px">
     <div class="ncli-head" style="margin-bottom:28px">
       <div class="ncli-left">
         <div class="ncli-stripe"></div>
@@ -3717,22 +3717,20 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
       </div>
     </div>
 
-    <div class="card" style="padding:24px;max-width:640px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <div style="font-size:16px;font-weight:600;letter-spacing:-0.04em;color:#F0F0F2">Assinatura</div>
+    <div class="pdata-block" style="max-width:640px">
+      <div class="pdata-bhead">
+        <span class="pdata-btitle">Assinatura</span>
         <button class="pdata-edit" onclick="showToast('Gestão de assinatura em breve')">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.655 0.572479H3.47156C1.67587 0.572479 0.549988 1.84378 0.549988 3.64356V8.49867C0.549988 10.2985 1.67061 11.5698 3.47156 11.5698H8.62446C10.426 11.5698 11.5466 10.2985 11.5466 8.49867V6.14645M7.79984 1.63154L10.4662 4.29793M4.09904 5.32129L8.46301 0.957305C9.00668 0.414215 9.88788 0.414215 10.4316 0.957305L11.1422 1.66799C11.6859 2.21167 11.6859 3.09346 11.1422 3.63655L6.75725 8.02156C6.51957 8.25924 6.19723 8.39296 5.86086 8.39296H3.67333L3.72823 6.18557C3.7364 5.86088 3.86896 5.55138 4.09904 5.32129Z" stroke="#8696B0" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Editar
         </button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 24px;margin-bottom:20px">
-        <div><div class="ncc-col-lbl">Assinatura</div><div class="ncc-col-val" style="color:#03C800;display:flex;align-items:center;gap:6px">✓ Ativa</div></div>
-        <div><div class="ncc-col-lbl">Cliente desde</div><div class="ncc-col-val" id="ctaDesde">—</div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px 24px">
-        <div><div class="ncc-col-lbl">Periocidade</div><div class="ncc-col-val">Mensal</div></div>
-        <div><div class="ncc-col-lbl">Forma de pagamento</div><div class="ncc-col-val">Cartão de crédito</div></div>
-        <div><div class="ncc-col-lbl">Vencimento</div><div class="ncc-col-val">—</div></div>
+      <div class="pdata-clean-grid">
+        <div class="pdata-item"><span class="pdata-lbl">Assinatura</span><span class="pdata-vl" style="color:#03C800;display:flex;align-items:center;gap:6px">✓ Ativa</span></div>
+        <div class="pdata-item"><span class="pdata-lbl">Cliente desde</span><span class="pdata-vl" id="ctaDesde">—</span></div>
+        <div class="pdata-item"><span class="pdata-lbl">Periocidade</span><span class="pdata-vl">Mensal</span></div>
+        <div class="pdata-item"><span class="pdata-lbl">Forma de pagamento</span><span class="pdata-vl">Cartão de crédito</span></div>
+        <div class="pdata-item"><span class="pdata-lbl">Vencimento</span><span class="pdata-vl">—</span></div>
       </div>
     </div>
   </div><!-- /pg-conta -->
