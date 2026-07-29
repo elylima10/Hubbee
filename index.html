@@ -3697,11 +3697,12 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
     <div class="ncli-head" style="margin-bottom:28px">
       <div class="ncli-left">
         <div class="ncli-stripe"></div>
-        <div style="width:76px;height:76px;border-radius:50%;background:#292E3E;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#F5B104;flex-shrink:0;position:relative;flex-shrink:0">
+        <div id="ctaAvBox" style="width:76px;height:76px;border-radius:50%;background:#292E3E;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#F5B104;flex-shrink:0;position:relative;background-size:cover;background-position:center">
           <span id="ctaAv">EL</span>
-          <button onclick="showToast('Envio de foto em breve')" style="position:absolute;bottom:-2px;right:-2px;width:24px;height:24px;border-radius:50%;background:#F5B104;border:2px solid #151A1D;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">
+          <button onclick="document.getElementById('ctaAvInput').click()" style="position:absolute;bottom:-2px;right:-2px;width:24px;height:24px;border-radius:50%;background:#F5B104;border:2px solid #151A1D;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#151A1D" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           </button>
+          <input type="file" id="ctaAvInput" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="hbUploadAvatar(this)">
         </div>
         <div class="ncli-info">
           <div class="ncli-namerow">
@@ -3732,6 +3733,13 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
         <div class="pdata-item"><span class="pdata-lbl">Forma de pagamento</span><span class="pdata-vl">Cartão de crédito</span></div>
         <div class="pdata-item"><span class="pdata-lbl">Vencimento</span><span class="pdata-vl">—</span></div>
       </div>
+    </div>
+
+    <div style="max-width:640px;margin-top:20px">
+      <button onclick="hbLogout()" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;letter-spacing:-0.04em;color:#FF3D3D;background:none;border:1px solid rgba(255,61,61,0.35);padding:11px 18px;border-radius:12px;cursor:pointer;font-family:'Bricolage Grotesque',sans-serif;transition:background .15s" onmouseover="this.style.background='rgba(255,61,61,0.10)'" onmouseout="this.style.background='none'">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FF3D3D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        Sair
+      </button>
     </div>
   </div><!-- /pg-conta -->
 
@@ -4106,6 +4114,43 @@ async function hbRenderConta(){
     var d=c.created_at?new Date(c.created_at):null;
     elDesde.textContent=d?(String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()):'—';
   }
+  hbCarregarAvatar();
+}
+// ── Foto de perfil ──────────────────────────────────────────
+function hbAplicarAvatarUrl(url){
+  var box=document.getElementById('ctaAvBox');
+  if(box){box.style.backgroundImage="url('"+url+"')";var sp=document.getElementById('ctaAv');if(sp)sp.style.opacity='0';}
+  var fa=document.getElementById('sFooterAv');
+  if(fa){fa.style.backgroundImage="url('"+url+"')";fa.style.backgroundSize='cover';fa.style.backgroundPosition='center';fa.textContent='';}
+  var ma=document.querySelector('.mobile-avatar');
+  if(ma){ma.style.backgroundImage="url('"+url+"')";ma.style.backgroundSize='cover';ma.style.backgroundPosition='center';ma.textContent='';}
+}
+async function hbCarregarAvatar(){
+  if(!HB.corretor||!HB.corretor.avatar_path)return;
+  var r=await _supa.storage.from('documentos').createSignedUrl(HB.corretor.avatar_path,3600);
+  if(!r.error&&r.data)hbAplicarAvatarUrl(r.data.signedUrl);
+}
+async function hbUploadAvatar(input){
+  var file=input.files&&input.files[0];
+  if(!file)return;
+  if(!/^image\/(png|jpe?g|webp)$/.test(file.type)){showToast('Envie uma imagem PNG, JPG ou WEBP.');return;}
+  if(file.size>4*1024*1024){showToast('A imagem deve ter até 4MB.');return;}
+  if(!HB.user){showToast('Sessão expirada, faça login novamente.');return;}
+  showToast('Enviando foto...');
+  var safe=file.name.replace(/[^A-Za-z0-9._-]/g,'_');
+  var path=HB.user.id+'/avatar/'+Date.now()+'_'+safe;
+  var up=await _supa.storage.from('documentos').upload(path,file,{contentType:file.type});
+  if(up.error){showToast('Erro ao enviar a foto.');return;}
+  var oldPath=HB.corretor&&HB.corretor.avatar_path;
+  var r=await _supa.from('corretores').update({avatar_path:path}).eq('id',HB.user.id).select().single();
+  if(r.error){showToast('Erro ao salvar a foto.');return;}
+  HB.corretor=r.data;
+  if(oldPath)_supa.storage.from('documentos').remove([oldPath]).then(function(){});
+  hbCarregarAvatar();
+  showToast('Foto atualizada!');
+}
+function hbLogout(){
+  _supa.auth.signOut().then(function(){location.reload();});
 }
 function openEditContaModal(){
   var c=HB.corretor||{};
@@ -7135,6 +7180,7 @@ async function hbBaixarDoc(path){
         var el=document.getElementById('sFooterName');if(el)el.textContent=c.nome;
         var av=document.getElementById('sFooterAv');
         if(av){var ini=c.nome.split(' ');av.textContent=((ini[0]?ini[0][0]:'')+(ini[1]?ini[1][0]:'')).toUpperCase()||'HB';}
+        hbCarregarAvatar();
       }
       var sc=document.getElementById('authScreen');
       if(sc){sc.classList.add('hide');setTimeout(function(){sc.style.display='none';},500);}
