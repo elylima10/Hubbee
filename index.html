@@ -2413,11 +2413,11 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
         </div>
         <button class="au-btn-main" style="color:#000" onclick="auLogin()">ENTRAR</button>
         <div class="au-divider">ou</div>
-        <button class="au-social" onclick="auLogin()">
+        <button class="au-social" onclick="hbSocialLogin('google')">
           <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 0 1 5.49 12c0-.73.13-1.43.35-2.1V7.06H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.94l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.61 0 3.06.55 4.21 1.64l3.16-3.16A11 11 0 0 0 12 1 11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z"/></svg>
           Entrar com Google
         </button>
-        <button class="au-social" onclick="auLogin()">
+        <button class="au-social" onclick="hbSocialLogin('facebook')">
           <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12a12 12 0 1 0-13.88 11.85v-8.38H7.08V12h3.04V9.36c0-3 1.79-4.67 4.53-4.67 1.31 0 2.68.24 2.68.24v2.95h-1.51c-1.49 0-1.95.92-1.95 1.87V12h3.32l-.53 3.47h-2.79v8.38A12 12 0 0 0 24 12z"/></svg>
           Entrar com Facebook
         </button>
@@ -4127,7 +4127,9 @@ function hbAplicarAvatarUrl(url){
 }
 async function hbCarregarAvatar(){
   if(!HB.corretor||!HB.corretor.avatar_path)return;
-  var r=await _supa.storage.from('documentos').createSignedUrl(HB.corretor.avatar_path,3600);
+  var p=HB.corretor.avatar_path;
+  if(/^https?:\/\//i.test(p)){hbAplicarAvatarUrl(p);return;}
+  var r=await _supa.storage.from('documentos').createSignedUrl(p,3600);
   if(!r.error&&r.data)hbAplicarAvatarUrl(r.data.signedUrl);
 }
 async function hbUploadAvatar(input){
@@ -4151,6 +4153,28 @@ async function hbUploadAvatar(input){
 }
 function hbLogout(){
   _supa.auth.signOut().then(function(){location.reload();});
+}
+function hbSocialLogin(provider){
+  _supa.auth.signInWithOAuth({provider:provider,options:{redirectTo:window.location.origin+window.location.pathname}});
+}
+// Preenche nome e foto automaticamente no 1º login via Google/Facebook,
+// sem sobrescrever o que o corretor já editou manualmente depois.
+async function hbSincronizarPerfilOAuth(user,corretor){
+  if(!user||!corretor)return corretor;
+  var meta=user.user_metadata||{};
+  var upd={};
+  if(!corretor.nome){
+    upd.nome=meta.full_name||meta.name||(user.email?user.email.split('@')[0]:'Corretor');
+  }
+  if(!corretor.avatar_path){
+    var foto=meta.avatar_url||meta.picture||null;
+    if(foto)upd.avatar_path=foto;
+  }
+  if(Object.keys(upd).length===0)return corretor;
+  var r=await _supa.from('corretores').update(upd).eq('id',user.id).select().single();
+  if(r.error)return corretor;
+  HB.corretor=r.data;
+  return r.data;
 }
 function openEditContaModal(){
   var c=HB.corretor||{};
@@ -7176,6 +7200,8 @@ async function hbBaixarDoc(path){
     if(!session)return;
     HB.user=session.user;
     hbLoadCorretor().then(function(c){
+      return hbSincronizarPerfilOAuth(session.user,c);
+    }).then(function(c){
       if(c){
         var el=document.getElementById('sFooterName');if(el)el.textContent=c.nome;
         var av=document.getElementById('sFooterAv');
