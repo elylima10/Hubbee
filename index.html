@@ -4129,17 +4129,21 @@ var SUPA_URL = 'https://abryfgobybuhccbdasxx.supabase.co';
 var SUPA_KEY = 'sb_publishable_bwuvwBgcDTtccoNjOszVqg_wYZgK6j4';
 var _supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 var HB = { user: null, corretor: null };
-var _hbIsRecovery=false;
+var _hbIsRecovery=/type=recovery/.test(window.location.hash);
+function hbMostrarTelaRecuperacao(){
+  var sc=document.getElementById('authScreen');
+  if(sc){sc.style.display='flex';sc.classList.remove('hide');}
+  document.querySelectorAll('.au-step').forEach(function(s){s.classList.remove('active','back-anim')});
+  var rp=document.getElementById('auStepReset');
+  if(rp)rp.classList.add('active');
+  var bar=document.getElementById('auBar');if(bar)bar.style.display='none';
+  var nb=document.getElementById('auNextBtn');if(nb)nb.style.display='none';
+}
+if(_hbIsRecovery)hbMostrarTelaRecuperacao();
 _supa.auth.onAuthStateChange(function(event){
   if(event==='PASSWORD_RECOVERY'){
     _hbIsRecovery=true;
-    var sc=document.getElementById('authScreen');
-    if(sc){sc.style.display='flex';sc.classList.remove('hide');}
-    document.querySelectorAll('.au-step').forEach(function(s){s.classList.remove('active','back-anim')});
-    var rp=document.getElementById('auStepReset');
-    if(rp)rp.classList.add('active');
-    var bar=document.getElementById('auBar');if(bar)bar.style.display='none';
-    var nb=document.getElementById('auNextBtn');if(nb)nb.style.display='none';
+    hbMostrarTelaRecuperacao();
   }
 });
 
