@@ -2411,6 +2411,7 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
+        <div style="text-align:right;margin-top:-8px;margin-bottom:16px"><a onclick="auGoForgot()" style="font-size:13px;font-weight:500;letter-spacing:-0.04em;color:#8696B0;cursor:pointer;text-decoration:underline">Esqueceu sua senha?</a></div>
         <button class="au-btn-main" style="color:#000" onclick="auLogin()">ENTRAR</button>
         <div class="au-divider">ou</div>
         <button class="au-social" onclick="hbSocialLogin('google')">
@@ -2422,6 +2423,42 @@ table.wiz-xl-table thead th{background:rgba(0,0,0,0.20)}
           Entrar com Facebook
         </button>
         <div class="au-first"><a onclick="auGo(1)"><span>Primeira vez aqui?</span>Meu primeiro acesso →</a></div>
+      </div>
+
+      <!-- STEP · ESQUECI MINHA SENHA -->
+      <div class="au-step" id="auStepForgot">
+        <div class="au-title">Recuperar senha</div>
+        <div class="au-sub">Digite seu e-mail cadastrado e enviaremos um link para você criar uma nova senha.</div>
+        <div class="au-field" onclick="this.querySelector('input').focus()">
+          <label>E-mail</label>
+          <input type="email" id="auForgotEmail" placeholder="seuemail@exemplo.com">
+        </div>
+        <div id="auForgotErr" style="display:none;font-size:13px;font-weight:500;letter-spacing:-0.04em;color:#FF6B6B;margin-top:2px">​</div>
+        <div id="auForgotOk" style="display:none;font-size:13px;font-weight:500;letter-spacing:-0.04em;color:#03C800;margin:2px 0 14px">Link enviado! Confira sua caixa de entrada (e o spam).</div>
+        <button class="au-btn-main" id="auForgotBtn" style="color:#000" onclick="auEnviarReset()">ENVIAR LINK</button>
+        <div class="au-first"><a onclick="auVoltarLogin()"><span>Lembrou a senha?</span>Voltar para o login →</a></div>
+      </div>
+
+      <!-- STEP · CRIAR NOVA SENHA (via link do e-mail) -->
+      <div class="au-step" id="auStepReset">
+        <div class="au-title">Criar nova senha</div>
+        <div class="au-sub">Escolha uma nova senha para acessar sua conta.</div>
+        <div class="au-field has-eye" onclick="this.querySelector('input').focus()">
+          <label>Nova senha</label>
+          <input type="password" id="auResetPass" placeholder="••••••••••">
+          <button class="au-eye" onclick="event.stopPropagation();auToggleEye('auResetPass',this)" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="au-field has-eye" onclick="this.querySelector('input').focus()">
+          <label>Confirmar nova senha</label>
+          <input type="password" id="auResetPass2" placeholder="••••••••••">
+          <button class="au-eye" onclick="event.stopPropagation();auToggleEye('auResetPass2',this)" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div id="auResetErr" style="display:none;font-size:13px;font-weight:500;letter-spacing:-0.04em;color:#FF6B6B;margin-top:2px">​</div>
+        <button class="au-btn-main" id="auResetBtn" style="color:#000" onclick="auSalvarNovaSenha()">SALVAR NOVA SENHA</button>
       </div>
 
       <!-- STEP 1 · QUEM É VOCÊ -->
@@ -4092,6 +4129,19 @@ var SUPA_URL = 'https://abryfgobybuhccbdasxx.supabase.co';
 var SUPA_KEY = 'sb_publishable_bwuvwBgcDTtccoNjOszVqg_wYZgK6j4';
 var _supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 var HB = { user: null, corretor: null };
+var _hbIsRecovery=false;
+_supa.auth.onAuthStateChange(function(event){
+  if(event==='PASSWORD_RECOVERY'){
+    _hbIsRecovery=true;
+    var sc=document.getElementById('authScreen');
+    if(sc){sc.style.display='flex';sc.classList.remove('hide');}
+    document.querySelectorAll('.au-step').forEach(function(s){s.classList.remove('active','back-anim')});
+    var rp=document.getElementById('auStepReset');
+    if(rp)rp.classList.add('active');
+    var bar=document.getElementById('auBar');if(bar)bar.style.display='none';
+    var nb=document.getElementById('auNextBtn');if(nb)nb.style.display='none';
+  }
+});
 
 async function hbLoadCorretor() {
   if (!HB.user) return null;
@@ -6699,6 +6749,68 @@ function auShowStep(i,back){
   if(first&&window.innerWidth>960)setTimeout(function(){first.focus()},380);
 }
 function auGo(i){auShowStep(i,false)}
+// ── Recuperação de senha ────────────────────────────────────
+function auGoForgot(){
+  document.querySelectorAll('.au-step').forEach(function(s){s.classList.remove('active','back-anim')});
+  document.getElementById('auStepForgot').classList.add('active');
+  document.getElementById('auBar').style.display='none';
+  document.getElementById('auNextBtn').style.display='none';
+  document.getElementById('auForgotErr').style.display='none';
+  document.getElementById('auForgotOk').style.display='none';
+  var inp=document.getElementById('auForgotEmail');inp.value='';
+  if(window.innerWidth>960)setTimeout(function(){inp.focus()},380);
+}
+function auVoltarLogin(){
+  document.querySelectorAll('.au-step').forEach(function(s){s.classList.remove('active','back-anim')});
+  document.getElementById('auStep0').classList.add('active');
+  document.getElementById('auBar').style.display='none';
+}
+function auEnviarReset(){
+  var email=(document.getElementById('auForgotEmail').value||'').trim();
+  var errEl=document.getElementById('auForgotErr');
+  var okEl=document.getElementById('auForgotOk');
+  okEl.style.display='none';
+  if(!email||email.indexOf('@')===-1){
+    errEl.textContent='Digite um e-mail válido.';errEl.style.display='block';return;
+  }
+  errEl.style.display='none';
+  var btn=document.getElementById('auForgotBtn');
+  btn.disabled=true;btn.style.opacity='.6';btn.textContent='ENVIANDO...';
+  _supa.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname}).then(function(){
+    btn.disabled=false;btn.style.opacity='1';btn.textContent='ENVIAR LINK';
+    okEl.style.display='block';
+  }).catch(function(){
+    btn.disabled=false;btn.style.opacity='1';btn.textContent='ENVIAR LINK';
+    okEl.style.display='block';
+  });
+}
+function auSalvarNovaSenha(){
+  var p1=(document.getElementById('auResetPass').value||'').trim();
+  var p2=(document.getElementById('auResetPass2').value||'').trim();
+  var errEl=document.getElementById('auResetErr');
+  if(!p1||p1.length<6){errEl.textContent='A senha precisa ter pelo menos 6 caracteres.';errEl.style.display='block';return;}
+  if(p1!==p2){errEl.textContent='As senhas não coincidem.';errEl.style.display='block';return;}
+  errEl.style.display='none';
+  var btn=document.getElementById('auResetBtn');
+  btn.disabled=true;btn.style.opacity='.6';btn.textContent='SALVANDO...';
+  _supa.auth.updateUser({password:p1}).then(function(res){
+    btn.disabled=false;btn.style.opacity='1';btn.textContent='SALVAR NOVA SENHA';
+    if(res.error){errEl.textContent='Não foi possível salvar. Tente pedir um novo link.';errEl.style.display='block';return;}
+    _hbIsRecovery=false;
+    history.replaceState(null,'',window.location.pathname);
+    showToast('Senha atualizada! Entrando...');
+    auHide();
+    hbLoadCorretor().then(function(c){
+      if(c){
+        var el=document.getElementById('sFooterName');if(el)el.textContent=c.nome;
+        var av=document.getElementById('sFooterAv');
+        if(av){var ini=(c.nome||'').split(' ');av.textContent=((ini[0]?ini[0][0]:'')+(ini[1]?ini[1][0]:'')).toUpperCase()||'HB';}
+        hbCarregarAvatar();
+      }
+      hbRenderDashboard();
+    });
+  });
+}
 function auBack(){if(auCurrent>1)auShowStep(auCurrent-1,true);else auShowStep(0,true)}
 function auNext(){
   if(auCurrent===1){
@@ -7198,6 +7310,7 @@ async function hbBaixarDoc(path){
   _supa.auth.getSession().then(function(res){
     var session=res.data&&res.data.session;
     if(!session)return;
+    if(_hbIsRecovery)return;
     HB.user=session.user;
     hbLoadCorretor().then(function(c){
       return hbSincronizarPerfilOAuth(session.user,c);
